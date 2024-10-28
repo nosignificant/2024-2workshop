@@ -23,10 +23,11 @@ public class GameManager : MonoBehaviour
 
         GameObject moduleInstance = Instantiate(modulePrefab);
         Module module1 = moduleInstance.GetComponent<Module>();
+        module1.SetModuleNum(1);
 
         // 지도 생성
         CreateMap(row, col);
-        module1.CreateModule(3, 3, parent.transform);
+        module1.CreateModule(3, 3, moduleInstance.transform);
 
         // 경로 찾기 및 설정
         Queue<Vector2> path = module1.FindPathInModule(0, 0, 2, 2); // 시작점 (0,0), 목적지 (2,2)

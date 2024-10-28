@@ -33,17 +33,17 @@ public class ShapeTile : Tile
         while (pathQueue.Count > 0)
         {
             Vector2 nextPos = pathQueue.Dequeue();
-            Vector3 targetPosition = new Vector3(nextPos.x, nextPos.y, transform.position.z);
+            Vector2 targetPos = new Vector3(nextPos.x, nextPos.y);
 
             Debug.Log($"Moving towards: ({nextPos.x}, {nextPos.y})");
 
-            while (Vector3.Distance(transform.position, targetPosition) > 0.05f)
+            while (Vector3.Distance(transform.position, targetPos) > 0.05f)
             {
-                transform.position = Vector3.MoveTowards(transform.position, targetPosition, Time.deltaTime * 2);
+                transform.position = Vector3.MoveTowards(transform.position, targetPos, Time.deltaTime * 2);
                 yield return null;
             }
 
-            transform.position = targetPosition;
+            transform.position = targetPos;
             yield return new WaitForSeconds(0.1f);
         }
 

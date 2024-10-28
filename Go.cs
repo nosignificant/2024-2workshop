@@ -30,10 +30,11 @@ public class Go : MonoBehaviour
 
         // 유니티 상의 실제 타일 위치를 가져옵니다.
         Vector2 tilePos = GetModuleTilePos(x, y);
+        Vector2 endPos = GetModuleTilePos(endX, endY);
         pathStack.Push(tilePos);
 
         // 목표에 도달한 경우 경로 반환
-        if (x == endX && y == endY)
+        if (tilePos == endPos)
         {
             return true;
         }
@@ -49,8 +50,8 @@ public class Go : MonoBehaviour
 
         foreach (var dir in directions)
         {
-            int nextX = x + (int)dir.x;
-            int nextY = y + (int)dir.y;
+            int nextX = (int)tilePos.x + (int)dir.x;
+            int nextY = (int)tilePos.y + (int)dir.y;
 
             // 경계 내에 있고, 아직 방문하지 않았고, 이동 가능할 경우
             if (IsValidPosition(nextX, nextY, adjArray) && !visited[nextX, nextY] && adjArray[nextX, nextY] == 1)

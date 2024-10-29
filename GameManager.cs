@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
 using UnityEngine;
+using static UnityEditor.PlayerSettings;
 
 public class GameManager : MonoBehaviour
 {
@@ -8,12 +10,16 @@ public class GameManager : MonoBehaviour
     public Tile tilePrefab; // Tile 타입으로 직접 설정
     public GameObject modulePrefab;
     public static Tile[,] mapArray;
+    public static int[] moduleSize;
     public GameObject parent;
+    public ModuleTile moduleTilePrefab;
+    public static Module[] moduleArray;
 
-    public static int col,row;
+    public static int col, row;
 
     void Start()
     {
+        moduleArray = new Module[3];
         parent = GameObject.Find("parent");
 
         // 배열의 크기를 설정하고 초기화
@@ -21,32 +27,22 @@ public class GameManager : MonoBehaviour
         col = 10;
         mapArray = new Tile[row, col];
 
-        GameObject moduleInstance = Instantiate(modulePrefab);
-        Module module1 = moduleInstance.GetComponent<Module>();
-        module1.SetModuleNum(1);
+        moduleArray[1] = new Module(1,3,2,3); //public Module(int moduleNum, int startX, int startY, int size)
 
         // 지도 생성
         CreateMap(row, col);
-        module1.CreateModule(3, 3, moduleInstance.transform);
+        moduleArray[1].CreateModule();
+        ModuleTileInstiate(1, parent.transform);
 
-        // 경로 찾기 및 설정
-        Queue<Vector2> path = module1.FindPathInModule(0, 0, 2, 2); // 시작점 (0,0), 목적지 (2,2)
-
-        ShapeTile shapeTile = GameObject.FindObjectOfType<ShapeTile>(); // ShapeTile 객체 찾기
-        if (shapeTile != null)
-        {
-            shapeTile.SetPath(path); // 찾은 경로를 ShapeTile에 설정
-        }
+        // 모듈 생성
     }
-
-
-
 
     void CreateMap(int row, int col)
     {
         for (int i = 0; i < row; i++)
         {
-            for (int j = 0; j < col; j++) {
+            for (int j = 0; j < col; j++)
+            {
                 Tile tileInstance = Instantiate(tilePrefab, parent.transform);
                 tileInstance.transform.position = new Vector3(i, j, 10);
                 tileInstance.SetTileNum(i, j);
@@ -55,26 +51,56 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void NextTilePos(int x, int y)
-    {
-        int a = mapArray[x, y].GetTileNumX();
-        int b = mapArray[x, y].GetTileNumY();
-
-        mapArray[a + PlayerMove.playerMoveX, b + PlayerMove.playerMoveY].GetPos();
-    }
-
-    /*public void SearchTilePos(Vector2 pos)
+    void ModuleTileInstiate(int moduleNum, Transform pos) // 맵 정보 불러와서 모듈프리팹만듦 
     {
         for (int i = 0; i < row; i++)
         {
             for (int j = 0; j < col; j++)
             {
-                
-                if(pos == mapArray[i, j].GetPos()) {
-                return 
+                if(mapArray[i, j].isModule == true)
+                {
+                    ModuleTile newTile = Instantiate(moduleTilePrefab, pos);
+                    newTile.transform.position = new Vector3(i, j, 10);
+                    newTile.isModule = true;
+                    newTile.moduleNum = moduleNum;
+                    mapArray[i, j] = newTile;
                 }
-                    
             }
         }
-    }*/
+    }
+
+    public static int SearchTileNumX(Vector2 pos)
+    {
+        for (int i = 0; i < row; i++)
+        {
+            for (int j = 0; j < col; j++)
+            {
+                if (pos == mapArray[i, j].GetPos())
+                {
+                    return mapArray[i, j].GetTileNumX();
+                }
+            }
+        }
+        return -1;
+    }
+
+    public static Module GetModuleInfo(int moduleNum)
+    {
+        return moduleArray[moduleNum];
+    }
+
+    public static int SearchTileNumY(Vector2 pos)
+    {
+        for (int i = 0; i < row; i++)
+        {
+            for (int j = 0; j < col; j++)
+            {
+                if (pos == mapArray[i, j].GetPos())
+                {
+                    return mapArray[i, j].GetTileNumY();
+                }
+            }
+        }
+        return -1;
+    }
 }

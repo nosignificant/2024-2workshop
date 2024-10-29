@@ -4,6 +4,8 @@ public class Tile : MonoBehaviour
 {
     private int tileX; // 타일의 X 인덱스
     private int tileY; // 타일의 Y 인덱스
+    public bool isModule = false;
+    public int moduleNum = 0;
 
 
     public Vector2 GetPos()
@@ -31,5 +33,14 @@ public class Tile : MonoBehaviour
     {
         this.tileX = x;
         this.tileY = y;
+    }
+
+    public void YesModuleNum()
+    {
+        this.isModule = true;
+    }
+
+    public bool IsModule() {
+        return isModule;
     }
 }

@@ -2,41 +2,52 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Module : MonoBehaviour
+public class Module 
 {
     [SerializeField]
-    public Tile moduletile;
-    public int moduleNum;
-    private int[,] adjArray; // 모듈 내 이동 가능 여부를 저장하는 배열
+    public ModuleTile moduletile;
+    public int moduleNum, startX, startY, size;
+    private int[,] adjArray;
 
-    public void CreateModule(int Size, int startPos, Transform pos)
+    public Module(int moduleNum, int startX, int startY, int size)
     {
-        adjArray = new int[Size, Size];
-        for (int i = startPos; i < Size + startPos; i++)
-        {
-            int a = 0;
-            int b = 0;
-            for (int j = startPos; j < Size + startPos; j++)
-            {
-                
-                Tile newTile = Instantiate(moduletile, pos);
-                newTile.SetTileNum(a, b);
-                newTile.transform.position = new Vector3(i, j, 2);
-                GameManager.mapArray[i, j] = newTile;
+        this.moduleNum = moduleNum;
+        this.startX = startX;
+        this.startY = startY;
+        this.size = size;
+        adjArray = new int[size, size];
 
-                // 예를 들어, 모든 타일이 이동 가능하도록 설정
-                adjArray[i - startPos, j - startPos] = 1;
-                b++;
-            }
-            a++;
+        for (int i = 0; i < size; i++)
+        {
+            for (int j = 0; j < size; j++) { adjArray[i, j] = 1; }
         }
+    }
+
+    public void CreateModule()
+    {
+        for (int i = startX; i < size + startX; i++)
+        {
+            for (int j = startX; j < size + startX; j++)
+            {
+                GameManager.mapArray[i,j].moduleNum = moduleNum;
+                GameManager.mapArray[i, j].YesModuleNum();
+            }
+        }
+    }
+
+    public Vector2 SetRandEndPos(int moduleNum)
+    {  
+        int x = Random.Range(startX, startX + size);
+        int y = Random.Range(startY, startY + size);
+        Vector2 endPos = GameManager.mapArray[x , y].GetPos();
+        return endPos;
     }
 
     public void SetModuleNum(int a) { this.moduleNum = a; }
     public int GetModuleNum(int a) { return this.moduleNum; }
-    public Queue<Vector2> FindPathInModule(int startX, int startY, int endX, int endY)
+
+    public int GetModuleSize()
     {
-        Go pathFinder = new Go();
-        return pathFinder.FindPaths(startX, startY, endX, endY, adjArray);
+        return this.size;
     }
 }

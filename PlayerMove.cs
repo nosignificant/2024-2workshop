@@ -6,7 +6,6 @@ public class PlayerMove : Tile
 {
     private bool readyToMove = true;
     private bool isTriggered = false;
-    private bool isMoving = false;
     public float moveDistance = 1.0f;
     public static Vector2 moveInput;
     public static int playerMoveX, playerMoveY;
@@ -32,7 +31,6 @@ public class PlayerMove : Tile
         playerMoveX = 0;
         playerMoveY = 0;
         startPos = base.GetPos();
-        isMoving = true; // 이동 중 상태 설정
 
         // 수평 또는 수직 방향으로만 움직이도록 설정
         if (Mathf.Abs(direction.x) < 0.5f)
@@ -61,7 +59,6 @@ public class PlayerMove : Tile
 
         // 이동이 끝났음을 알림
         readyToMove = true;
-        isMoving = false;
     }
 
     void OnTriggerEnter(Collider other)

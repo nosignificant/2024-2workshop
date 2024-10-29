@@ -2,17 +2,26 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Go : MonoBehaviour
+public class Go
 {
     private Stack<Vector2> pathStack = new Stack<Vector2>();
     private bool[,] visited;
+    private int startX, startY, endX, endY;
+    private int xSize, ySize;
 
-    public Queue<Vector2> FindPaths(int startX, int startY, int endX, int endY, int[,] adjArray)
+    public Queue<Vector2> FindPaths(Vector2 currentPos, Vector2 endPos)
     {
-        visited = new bool[adjArray.GetLength(0), adjArray.GetLength(1)];
+        startX = (int)currentPos.x;
+        startY = (int)currentPos.y;
+        endX = (int)endPos.x;
+        endY = (int)endPos.y;
+        xSize = Mathf.Abs(endX - startX) + 1;
+        ySize = Mathf.Abs(endY - startY) + 1;
+
+        visited = new bool[xSize, ySize];
         Queue<Vector2> pathQueue = new Queue<Vector2>();
 
-        if (DFS(startX, startY, endX, endY, adjArray))
+        if (DFS(startX, startY, endX, endY)) //DFS(int x, int y, int endX, int endY)
         {
             // Stack을 Queue로 변환하여 경로 반환
             foreach (var pos in pathStack)
@@ -24,17 +33,18 @@ public class Go : MonoBehaviour
         return pathQueue;
     }
 
-    private bool DFS(int x, int y, int endX, int endY, int[,] adjArray)
+    private bool DFS(int x, int y, int endX, int endY)
     {
-        visited[x, y] = true;
+        if (!IsValidPosition(x, y) || visited[x - startX, y - startY])
+        {
+            return false;
+        }
 
-        // 유니티 상의 실제 타일 위치를 가져옵니다.
-        Vector2 tilePos = GetModuleTilePos(x, y);
-        Vector2 endPos = GetModuleTilePos(endX, endY);
-        pathStack.Push(tilePos);
+        visited[x - startX, y - startY] = true;
+        pathStack.Push(new Vector2(x, y));
 
         // 목표에 도달한 경우 경로 반환
-        if (tilePos == endPos)
+        if (x == endX && y == endY)
         {
             return true;
         }
@@ -50,17 +60,12 @@ public class Go : MonoBehaviour
 
         foreach (var dir in directions)
         {
-            int nextX = (int)tilePos.x + (int)dir.x;
-            int nextY = (int)tilePos.y + (int)dir.y;
+            int nextX = x + (int)dir.x;
+            int nextY = y + (int)dir.y;
 
-            // 경계 내에 있고, 아직 방문하지 않았고, 이동 가능할 경우
-            if (IsValidPosition(nextX, nextY, adjArray) && !visited[nextX, nextY] && adjArray[nextX, nextY] == 1)
+            if (DFS(nextX, nextY, endX, endY))
             {
-                if (DFS(nextX, nextY, endX, endY, adjArray))
-                {
-                    return true; // 목표를 찾으면 true 반환
-                }
-                visited[nextX, nextY] = false; // 모든 경로를 탐색하기 위해 방문 표시 해제
+                return true; // 목표를 찾으면 true 반환
             }
         }
 
@@ -68,13 +73,8 @@ public class Go : MonoBehaviour
         return false;
     }
 
-    private bool IsValidPosition(int x, int y, int[,] adjArray)
+    private bool IsValidPosition(int x, int y)
     {
-        return x >= 0 && x < adjArray.GetLength(0) && y >= 0 && y < adjArray.GetLength(1);
-    }
-
-    private Vector2 GetModuleTilePos(int x, int y)
-    {
-        return GameManager.mapArray[x, y].GetPos(); 
+        return x >= startX && x < startX + xSize && y >= startY && y < startY + ySize;
     }
 }

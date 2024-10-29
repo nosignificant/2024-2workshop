@@ -4,9 +4,5 @@ using UnityEngine;
 
 public class ModuleTile : Tile
 {
-    public static bool IsTriggered = false;
-    private void OnTriggerEnter(Collider other)
-    {
-        IsTriggered = true; 
-    }
+    int ModuleNum;
 }

@@ -4,77 +4,83 @@ using UnityEngine;
 
 public class Go
 {
-    private Stack<Vector2> pathStack = new Stack<Vector2>();
-    private bool[,] visited;
-    private int startX, startY, endX, endY;
-    private int xSize, ySize;
-
     public Queue<Vector2> FindPaths(Vector2 currentPos, Vector2 endPos)
     {
-        startX = (int)currentPos.x;
-        startY = (int)currentPos.y;
-        endX = (int)endPos.x;
-        endY = (int)endPos.y;
-        xSize = Mathf.Abs(endX - startX) + 1;
-        ySize = Mathf.Abs(endY - startY) + 1;
+        int startX = (int)currentPos.x;
+        int startY = (int)currentPos.y;
+        int endX = (int)endPos.x;
+        int endY = (int)endPos.y;
 
-        visited = new bool[xSize, ySize];
+        bool[,] visited = new bool[GameManager.row, GameManager.col];
+        Queue<Vector2> queue = new Queue<Vector2>();
         Queue<Vector2> pathQueue = new Queue<Vector2>();
+        Dictionary<Vector2, Vector2> parentMap = new Dictionary<Vector2, Vector2>(); // 경로 추적용
 
-        if (DFS(startX, startY, endX, endY)) //DFS(int x, int y, int endX, int endY)
+        // 시작 위치 설정
+        Vector2 start = new Vector2(startX, startY);
+        queue.Enqueue(start);
+        visited[startX, startY] = true;
+
+        bool pathFound = false;
+
+        // BFS 탐색
+        while (queue.Count > 0 && !pathFound)
         {
-            // Stack을 Queue로 변환하여 경로 반환
-            foreach (var pos in pathStack)
+            Vector2 current = queue.Dequeue();
+
+            // 목표에 도달하면 BFS 종료
+            if (current.x == endX && current.y == endY)
             {
-                pathQueue.Enqueue(pos);
+                pathFound = true;
+                break;
             }
+
+            // 상하좌우 방향 탐색
+            Vector2[] directions = new Vector2[]
+            {
+                new Vector2(0, 1), // Up
+                new Vector2(1, 0), // Right
+                new Vector2(0, -1), // Down
+                new Vector2(-1, 0) // Left
+            };
+
+            foreach (var dir in directions)
+            {
+                int nextX = (int)current.x + (int)dir.x;
+                int nextY = (int)current.y + (int)dir.y;
+                Vector2 nextPos = new Vector2(nextX, nextY);
+
+                // 다음 위치가 유효하고 아직 방문하지 않았으면 큐에 추가
+                if (IsValidPosition(nextX, nextY) && !visited[nextX, nextY])
+                {
+                    queue.Enqueue(nextPos);
+                    visited[nextX, nextY] = true;
+                    parentMap[nextPos] = current; // 경로 추적을 위해 부모 노드 저장
+                }
+            }
+        }
+
+        // 경로가 발견된 경우, 목표 지점부터 시작 위치까지 경로를 역추적하여 Queue에 저장
+        if (pathFound)
+        {
+            Vector2 step = new Vector2(endX, endY);
+            while (step != start)
+            {
+                pathQueue.Enqueue(step);
+                step = parentMap[step];
+            }
+            pathQueue.Enqueue(start); // 시작 위치 추가
+
+            // Queue가 역순으로 되어 있으므로 순서를 뒤집음
+            pathQueue = new Queue<Vector2>(new Stack<Vector2>(pathQueue));
         }
 
         return pathQueue;
     }
 
-    private bool DFS(int x, int y, int endX, int endY)
-    {
-        if (!IsValidPosition(x, y) || visited[x - startX, y - startY])
-        {
-            return false;
-        }
-
-        visited[x - startX, y - startY] = true;
-        pathStack.Push(new Vector2(x, y));
-
-        // 목표에 도달한 경우 경로 반환
-        if (x == endX && y == endY)
-        {
-            return true;
-        }
-
-        // 상하좌우 탐색
-        Vector2[] directions = new Vector2[]
-        {
-            new Vector2(0, 1), // Up
-            new Vector2(1, 0), // Right
-            new Vector2(0, -1), // Down
-            new Vector2(-1, 0) // Left
-        };
-
-        foreach (var dir in directions)
-        {
-            int nextX = x + (int)dir.x;
-            int nextY = y + (int)dir.y;
-
-            if (DFS(nextX, nextY, endX, endY))
-            {
-                return true; // 목표를 찾으면 true 반환
-            }
-        }
-
-        pathStack.Pop();
-        return false;
-    }
-
     private bool IsValidPosition(int x, int y)
     {
-        return x >= startX && x < startX + xSize && y >= startY && y < startY + ySize;
+        // 전체 맵 크기 내에서 유효한지 확인
+        return x >= 0 && x < GameManager.row && y >= 0 && y < GameManager.col;
     }
 }

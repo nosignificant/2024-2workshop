@@ -13,7 +13,7 @@ public class GameManager : MonoBehaviour
     public static int[] moduleSize;
     public GameObject parent;
     public ModuleTile moduleTilePrefab;
-    public static Module[] moduleArray;
+    public static Module[] moduleArray; // 모듈 번호 저장 array
 
     public static int col, row;
 
@@ -23,17 +23,20 @@ public class GameManager : MonoBehaviour
         parent = GameObject.Find("parent");
 
         // 배열의 크기를 설정하고 초기화
-        row = 10;
-        col = 10;
+        row = 20;
+        col = 20;
         mapArray = new Tile[row, col];
 
-        moduleArray[1] = new Module(1,3,2,3); //public Module(int moduleNum, int startX, int startY, int size)
-
+        //public Module(int moduleNum, int startX, int startY, int size)
+        moduleArray[1] = new Module(1,1,1,10); 
+        moduleArray[2] = new Module(2, 11, 11, 1);
         // 지도 생성
         CreateMap(row, col);
-        moduleArray[1].CreateModule();
-        ModuleTileInstiate(1, parent.transform);
 
+        moduleArray[1].CreateModule();
+        moduleArray[2].CreateModule();
+        ModuleTileInstiate(1, parent.transform);
+        ModuleTileInstiate(2, parent.transform);
         // 모듈 생성
     }
 
@@ -47,6 +50,20 @@ public class GameManager : MonoBehaviour
                 tileInstance.transform.position = new Vector3(i, j, 10);
                 tileInstance.SetTileNum(i, j);
                 mapArray[i, j] = tileInstance;
+            }
+        }
+    }
+
+    public static Vector2 SetRandEndPos(int moduleNum)
+    {
+        while (true)
+        {
+            int rand1 = Random.Range(0, row);
+            int rand2 = Random.Range(0, col);
+
+            if (mapArray[rand1, rand2].moduleNum == moduleNum)
+            {
+                return mapArray[rand1, rand2].GetPos();
             }
         }
     }

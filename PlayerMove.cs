@@ -1,3 +1,4 @@
+// PlayerMove.cs
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -5,71 +6,67 @@ using UnityEngine;
 public class PlayerMove : Tile
 {
     private bool readyToMove = true;
-    private bool isTriggered = false;
-    public float moveDistance = 1.0f;
-    public static Vector2 moveInput;
     public static int playerMoveX, playerMoveY;
+    public static Vector2 playerMove;
     Vector2 startPos;
     Vector2 endPos;
 
+    // 전역으로 유지될 변수
+    public static Vector2 lastDirection = Vector2.zero;
+
     void Update()
     {
-        moveInput = new Vector2(Input.GetAxisRaw("Horizontal"),
-                                        Input.GetAxisRaw("Vertical"));
-        moveInput.Normalize();
-
-        if (moveInput.sqrMagnitude > 0.5f && readyToMove)
+        if (readyToMove)
         {
-            readyToMove = false;
-            StartCoroutine(Move(moveInput)); 
+            playerMove = ApplyUserInput();
+
+            // 이동 입력이 있을 경우에만 이동 시도
+            if (playerMove != Vector2.zero)
+            {
+                readyToMove = false;
+                lastDirection = playerMove; // 마지막 입력된 방향 저장
+                StartCoroutine(Move(playerMove));
+            }
         }
+
         SearchPos();
     }
 
-    private IEnumerator Move(Vector2 direction)
+    public static Vector2 ApplyUserInput()
     {
         playerMoveX = 0;
         playerMoveY = 0;
+
+        if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow))
+        {
+            playerMoveY = 1; // 위쪽으로 이동
+        }
+        else if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
+        {
+            playerMoveX = 1; // 오른쪽으로 이동
+        }
+        else if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow))
+        {
+            playerMoveY = -1; // 아래쪽으로 이동
+        }
+        else if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow))
+        {
+            playerMoveX = -1; // 왼쪽으로 이동
+        }
+        return new Vector2(playerMoveX, playerMoveY);
+    }
+
+    private IEnumerator Move(Vector2 playerMove)
+    {
         startPos = base.GetPos();
-
-        // 수평 또는 수직 방향으로만 움직이도록 설정
-        if (Mathf.Abs(direction.x) < 0.5f)
-        {
-            direction.x = 0;
-        }
-        else
-        {
-            direction.y = 0;
-        }
-        direction.Normalize();
-
-        if (direction.x > 0 && direction.y == 0) { playerMoveX = 1; }
-        else if (direction.x < 0 && direction.y == 0) { playerMoveX = -1; }
-
-        else if (direction.y > 0 && direction.x == 0) { playerMoveY = 1; }
-        else if (direction.y < 0 && direction.x == 0) { playerMoveY = -1; }
-
-        else if (direction.y > 0 && direction.x > 0) { playerMoveX = 1;  playerMoveY = 1; }
-
-        endPos = startPos + direction * moveDistance;
-        transform.position = endPos;
-        //CheckMove();
+        endPos = startPos + playerMove * 1.0f;
+        this.transform.position = endPos;
 
         yield return new WaitForSeconds(0.1f);
-
-        // 이동이 끝났음을 알림
         readyToMove = true;
     }
 
-    void OnTriggerEnter(Collider other)
-    {
-        if(other == GameObject.FindWithTag("module"))
-        {
-            isTriggered = true;
-        }
-    }
-
-    void SearchPos()
+    public void SearchPos()
     {
         for (int i = 0; i < GameManager.row; i++)
         {
@@ -86,24 +83,9 @@ public class PlayerMove : Tile
 
                 if (distanceX <= threshold && distanceY <= threshold)
                 {
-                    // 근접한 경우 thisPos를 tilePos로 이동
                     this.transform.position = new Vector3(tilePos.x, tilePos.y, this.transform.position.z);
-                    return; // 가장 가까운 타일로 이동 후 종료
+                    return;
                 }
-            }
-        }
-    }
-
-    void CheckMove()
-    {
-        int x, y;
-        for (int i = 0; i < GameManager.row; i++)
-        {
-            for (int j = 0; j < GameManager.col; j++)
-            {
-                Tile tileComponent = GameManager.mapArray[i, j].GetComponent<Tile>();
-                x = tileComponent.GetTileNumX();
-                y = tileComponent.GetTileNumY();
             }
         }
     }

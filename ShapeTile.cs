@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic; // Queue<> 자료형을 사용하기 위한 네임스페이스 추가
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using static UnityEditor.PlayerSettings;
 
 public class ShapeTile : Tile
@@ -18,98 +19,58 @@ public class ShapeTile : Tile
 
     private bool isMoving = false;
 
-    Go pathFinder = new Go();
-
-    private void Start()
-    {
-        endPos = currentPos;
-    }
     void Update()
     {
-        currentPos = base.GetPos();
-        if (moduleNum == 0)
-        {
-            endPos = currentPos;
-        }
-        else
-        {
-            endPos = GameManager.SetRandEndPos(currentModule.moduleNum);
-            Queue<Vector2> path = pathFinder.FindPaths(currentPos, endPos);
-            SetPath(path);
-        }
+        currentPos = this.transform.position;
 
-        if (pathFinder == null)
+        if (canGO)
         {
-            Debug.LogError("Go component is missing on this GameObject");
-            return;
-        }
-
-        if (Input.GetKeyDown(KeyCode.Space) && pathQueue.Count > 0)
-        {
-            Debug.Log("Starting movement along path.");
-            MoveAlongPath(); // 스페이스바 입력으로 이동 시작
-        }
-        else if (pathQueue.Count == 0)
-        {
-            Debug.LogWarning("Path queue is empty. No path found to move.");
+            if (!isMoving)
+            {
+                isMoving = true;
+                StartCoroutine(MoveCoroutine());
+            }
         }
     }
 
     private IEnumerator MoveCoroutine()
     {
-        if (pathQueue.Count == 0)
+        Vector2 newEndPos;
+        Tile targetTile;
+        ModuleTile previousTile = GameManager.SearchTile(currentPos) as ModuleTile;  // 이전 위치의 ModuleTile
+
+        do
         {
-            Debug.LogWarning("MoveCoroutine started but pathQueue is empty.");
-            yield break;
-        }
+            int x = 0, y = 0;
+            int randDir = Random.Range(0, 4);
 
-        while (pathQueue.Count > 0)
-        {
-            Vector2 nextPos = pathQueue.Dequeue();
-            Vector3 targetPos = new Vector3(nextPos.x, nextPos.y, transform.position.z);
-
-            Debug.Log($"Moving towards: ({nextPos.x}, {nextPos.y})");
-
-            // 타겟 위치에 도달할 때까지 이동
-            while (Vector3.Distance(transform.position, targetPos) > 0.05f)
+            switch (randDir)
             {
-                transform.position = Vector3.MoveTowards(transform.position, targetPos, Time.deltaTime * 2);
-                yield return null;
+                case 0: y = 1; break;   // Up
+                case 1: y = -1; break;  // Down
+                case 2: x = 1; break;   // Right
+                case 3: x = -1; break;  // Left
             }
+            newEndPos = currentPos + new Vector2(x, y) * 1.0f;
 
-            // 정확히 타겟 위치에 도달
-            transform.position = targetPos;
-            yield return new WaitForSeconds(0.1f);
+            targetTile = GameManager.SearchTile(newEndPos);
+            if (targetTile == null)
+            {
+                Debug.Log("null reference");
+                break;
+            }
         }
+        while (targetTile == null || targetTile.moduleNum != currentModule.moduleNum);
 
-        Debug.Log("Tile has reached the destination.");
+        yield return new WaitForSeconds(1.0f);
 
-
-
-
-
-        if (Input.GetKeyDown(KeyCode.Space) && pathQueue.Count > 0)
+        this.transform.position = newEndPos;
+        if (previousTile != null)
         {
-            MoveAlongPath(); // 스페이스바 입력으로 이동 시작
+            StartCoroutine(previousTile.FlashWhite(0.1f));
         }
+        isMoving = false;
     }
-
-
-    public void SetPath(Queue<Vector2> path)
-    {
-        pathQueue = path;
-    }
-
-
-    public void MoveAlongPath()
-    {
-        if (pathQueue.Count > 0)
-        {
-            StartCoroutine(MoveCoroutine());
-        }
-    }
-
-
 
     public void CollisionOp()
     {
@@ -132,11 +93,11 @@ public class ShapeTile : Tile
                 break;
             case "canGO":
                 canGO = true;
+                Debug.Log("cnaGo");
                 break;
         }
 
     }
-
 
     private void OnTriggerStay2D(Collider2D other)
     {
@@ -170,5 +131,16 @@ public class ShapeTile : Tile
         {
             canGO = false;
         }
+    }
+
+    public Vector2 SetRandEndPos()
+    {
+        int size = currentModule.size;
+        int startX = currentModule.startX;
+        int startY = currentModule.startY;
+        if (currentPos != new Vector2(startX, startY)) {
+        return new Vector2(startX + size, startY + size);
+        }
+        else { return new Vector2(startX, startY); }
     }
 }

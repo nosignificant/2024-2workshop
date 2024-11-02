@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using static UnityEditor.PlayerSettings;
 
@@ -28,8 +29,8 @@ public class GameManager : MonoBehaviour
         mapArray = new Tile[row, col];
 
         //public Module(int moduleNum, int startX, int startY, int size)
-        moduleArray[1] = new Module(1,1,1,10); 
-        moduleArray[2] = new Module(2, 11, 11, 1);
+        moduleArray[1] = new Module(1,1,1,4); 
+        moduleArray[2] = new Module(2, 6, 1, 3);
         // 지도 생성
         CreateMap(row, col);
 
@@ -54,20 +55,6 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public static Vector2 SetRandEndPos(int moduleNum)
-    {
-        while (true)
-        {
-            int rand1 = Random.Range(0, row);
-            int rand2 = Random.Range(0, col);
-
-            if (mapArray[rand1, rand2].moduleNum == moduleNum)
-            {
-                return mapArray[rand1, rand2].GetPos();
-            }
-        }
-    }
-
     void ModuleTileInstiate(int moduleNum, Transform pos) // 맵 정보 불러와서 모듈프리팹만듦 
     {
         for (int i = 0; i < row; i++)
@@ -86,38 +73,20 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public static int SearchTileNumX(Vector2 pos)
+    public static Tile SearchTile(Vector2 pos)
     {
         for (int i = 0; i < row; i++)
         {
             for (int j = 0; j < col; j++)
             {
-                if (pos == mapArray[i, j].GetPos())
-                {
-                    return mapArray[i, j].GetTileNumX();
-                }
+                if (mapArray[i, j].GetPos() == pos) return mapArray[i, j];
+                
             }
         }
-        return -1;
+        return null;
     }
-
     public static Module GetModuleInfo(int moduleNum)
     {
         return moduleArray[moduleNum];
-    }
-
-    public static int SearchTileNumY(Vector2 pos)
-    {
-        for (int i = 0; i < row; i++)
-        {
-            for (int j = 0; j < col; j++)
-            {
-                if (pos == mapArray[i, j].GetPos())
-                {
-                    return mapArray[i, j].GetTileNumY();
-                }
-            }
-        }
-        return -1;
     }
 }

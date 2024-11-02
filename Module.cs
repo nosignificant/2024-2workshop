@@ -27,7 +27,7 @@ public class Module
     {
         for (int i = startX; i < size + startX; i++)
         {
-            for (int j = startX; j < size + startX; j++)
+            for (int j = startY; j < size + startY; j++)
             {
                 GameManager.mapArray[i,j].moduleNum = moduleNum;
                 GameManager.mapArray[i, j].YesModuleNum();
@@ -35,19 +35,10 @@ public class Module
         }
     }
 
-    public Vector2 SetRandEndPos(int moduleNum)
-    {  
-        int x = Random.Range(startX, startX + size);
-        int y = Random.Range(startY, startY + size);
-        Vector2 endPos = GameManager.mapArray[x , y].GetPos();
-        return endPos;
-    }
-
     public void SetModuleNum(int a) { this.moduleNum = a; }
-    public int GetModuleNum(int a) { return this.moduleNum; }
+    public int GetModuleNum() { return this.moduleNum; }
 
+    public int GetModuleStartX() { return this.startX; }
     public int GetModuleSize()
-    {
-        return this.size;
-    }
+    { return this.size; }
 }

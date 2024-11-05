@@ -37,7 +37,6 @@ public class ShapeTile : Tile
             List<ShapeTile> sameATiles = ShapeTileManager.GetTilesWithSameA(thisA);
             foreach (ShapeTile tile in sameATiles)
             {
-                Debug.Log("SameShape: " + tile);
                 if (tile != this && !tile.isMoving)
                 {
                     tile.RecieveSignal();
@@ -47,14 +46,16 @@ public class ShapeTile : Tile
     }
     public void RecieveSignal()
     {
-        Debug.Log("Received Signal: " + this.gameObject.name);
+        //Debug.Log("Received Signal: " + this.gameObject.name);
         if (!isMoving)
             this.canGO = true;
     }
 
     public void RecieveStopSignal()
     {
-        this.canGO = false;
+        //Debug.Log("Received Signal: " + this.gameObject.name);
+        StopAllCoroutines();
+        canGO = false;
     }
     private IEnumerator MoveCoroutine()
     {
@@ -86,7 +87,7 @@ public class ShapeTile : Tile
 
             newEndPos = currentPos + new Vector2(x, y) * 1.0f;
             targetTile = currentModule.SearchModuleTile(moduleNum, newEndPos);
-            Debug.Log($"Attempting to move from {currentPos} to {newEndPos}");
+            //Debug.Log($"Attempting to move from {currentPos} to {newEndPos}");
 
             if (targetTile != null && targetTile.moduleNum == currentModule.moduleNum && !targetTile.visited)
             {
@@ -101,52 +102,46 @@ public class ShapeTile : Tile
         moveDirectionStack.Push(randDir);
 
         if (previousTile != null)
-            StartCoroutine(previousTile.FlashWhite(0.1f));
+            StartCoroutine(previousTile.FlashWhite(0.2f));
 
         isMoving = false;
     }
 
 
-    public void CollisionOp()
+    public void CollisionOp(GameObject gameObject)
     {
-        string name = collisionOp.name;
-        switch (name)
-        {
-            case "plus":
-                thisA++;
-                foreach (ShapeTile tile in sameATiles)
-                    tile.RecieveStopSignal();
-                sameATiles = ShapeTileManager.GetTilesWithSameA(thisA);
-                Destroy(collisionOp);
+        string name = gameObject.name;
+        Debug.Log("collision operator name is " + name);
+            switch (name)
+            {   
+                case "plus":
+                    thisA++;
+                    //foreach (ShapeTile tile in sameATiles) { tile.RecieveStopSignal(); }
+                    Debug.Log("o");
+                    //sameATiles = ShapeTileManager.GetTilesWithSameA(thisA);
+                    break;
+
+                case "minus":
+                    thisA--;
+                    //foreach (ShapeTile tile in sameATiles) { tile.RecieveStopSignal(); }
+                    //sameATiles = ShapeTileManager.GetTilesWithSameA(thisA);
+                    break;
+
+                case "and":
+                    if (HasL_Op[1])
+                        HasL_Op[1] = false;
+                    HasL_Op[0] = true;
+                Debug.Log("and met");
                 break;
 
-            case "minus":
-                thisA--;
-                foreach (ShapeTile tile in sameATiles)
-                    tile.RecieveStopSignal();
-                    sameATiles = ShapeTileManager.GetTilesWithSameA(thisA);
-                Destroy(collisionOp);
-                break;
+                case "or":
+                    if (HasL_Op[0])
+                        HasL_Op[0] = false;
+                    HasL_Op[1] = true;
 
-            case "and":
-                if (HasL_Op[1])
-                    HasL_Op[1] =false;
-                HasL_Op[0] = true;
-                Destroy(collisionOp);
-                break;
-
-            case "or":
-                if (HasL_Op[0])
-                    HasL_Op[0] = false;
-                HasL_Op[1] = true;
-                Destroy(collisionOp);
-                break;
-
-            case "canGO":
-                canGO = true;
-                break;
-        }
-
+                    break;
+            }
+        Destroy(gameObject);
     }
 
 
@@ -169,17 +164,35 @@ public class ShapeTile : Tile
                 }
             }
         }
+        else if(other.gameObject.name == "canGO")
+        {
+            canGO = true;
+        }
+    }
+    private void OnTriggerEnter2D(Collider2D other)
+    {
         if (other.gameObject.CompareTag("operator"))
         {
-            collisionOp = other.gameObject;
-            CollisionOp();
+            if (other != null)
+            {
+                
+                if (other.gameObject.name != "canGO")
+                {
+                    Debug.Log("Destroy Operator");
+                    CollisionOp(other.gameObject);
+                }
+            }
         }
+
     }
 
     private void OnTriggerExit2D(Collider2D collision)
     {
         if (collision.gameObject.name == "canGO")
         {
+            sameATiles = ShapeTileManager.GetTilesWithSameA(thisA);
+            foreach (ShapeTile tile in sameATiles)
+                tile.RecieveStopSignal();
             canGO = false;
         }
     }

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic; // Queue<> 자료형을 사용하기 위한 네임스페이스 추가
+using TMPro.Examples;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -8,6 +9,7 @@ using static UnityEditor.PlayerSettings;
 public class ShapeTile : Tile
 {
     private Queue<Vector2> pathQueue = new Queue<Vector2>();
+    private List<ShapeTile> sameATiles;
     private bool[] HasL_Op = { false, false }; // 0번은 and, 1번은 or 
 
     public bool IsTriggered = false;
@@ -23,18 +25,37 @@ public class ShapeTile : Tile
 
     void Update()
     {
-        currentPos = this.transform.position;
-
-        if (canGO)
+        currentPos = this.GetPos();
+    }
+    public void StartMoveSignal()
+    {
+        if (!isMoving && canGO)
         {
-            if (!isMoving)
+            isMoving = true;
+            StartCoroutine(MoveCoroutine());
+
+            List<ShapeTile> sameATiles = ShapeTileManager.GetTilesWithSameA(thisA);
+            foreach (ShapeTile tile in sameATiles)
             {
-                isMoving = true;
-                StartCoroutine(MoveCoroutine());
+                Debug.Log("SameShape: " + tile);
+                if (tile != this && !tile.isMoving)
+                {
+                    tile.RecieveSignal();
+                }
             }
         }
     }
+    public void RecieveSignal()
+    {
+        Debug.Log("Received Signal: " + this.gameObject.name);
+        if (!isMoving)
+            this.canGO = true;
+    }
 
+    public void RecieveStopSignal()
+    {
+        this.canGO = false;
+    }
     private IEnumerator MoveCoroutine()
     {
         int randDir;
@@ -46,9 +67,9 @@ public class ShapeTile : Tile
         {
             if (!currentModule.CheckForUnvisitedNeighbors(currentPos))
             {
-                Debug.Log("Resetting all tiles to unvisited as no unvisited neighbors found.");
+                //Debug.Log("Resetting all tiles to unvisited as no unvisited neighbors found.");
                 currentModule.ResetVisited();
-                ShapeTileManger.ResetTilesIfConditionMet();
+                ShapeTileManager.ResetTilesIfConditionMet();
 
             }
 
@@ -63,30 +84,24 @@ public class ShapeTile : Tile
                 case 3: x = -1; break;  // Left
             }
 
-            // 새로운 위치를 계산
             newEndPos = currentPos + new Vector2(x, y) * 1.0f;
-
             targetTile = currentModule.SearchModuleTile(moduleNum, newEndPos);
+            Debug.Log($"Attempting to move from {currentPos} to {newEndPos}");
 
-            // 타일 유효성 및 방문 여부 확인
             if (targetTile != null && targetTile.moduleNum == currentModule.moduleNum && !targetTile.visited)
             {
                 break; // 유효한 타일을 찾았으면 루프 종료
             }
         }
 
-        yield return new WaitForSeconds(1.0f);
+        yield return null;
 
-        // 새로운 위치로 이동
         this.transform.position = newEndPos;
         targetTile.visited = true;
         moveDirectionStack.Push(randDir);
 
-        // 이전 타일을 흰색으로 깜빡임 처리
         if (previousTile != null)
-        {
             StartCoroutine(previousTile.FlashWhite(0.1f));
-        }
 
         isMoving = false;
     }
@@ -99,11 +114,17 @@ public class ShapeTile : Tile
         {
             case "plus":
                 thisA++;
+                foreach (ShapeTile tile in sameATiles)
+                    tile.RecieveStopSignal();
+                sameATiles = ShapeTileManager.GetTilesWithSameA(thisA);
                 Destroy(collisionOp);
                 break;
 
             case "minus":
                 thisA--;
+                foreach (ShapeTile tile in sameATiles)
+                    tile.RecieveStopSignal();
+                    sameATiles = ShapeTileManager.GetTilesWithSameA(thisA);
                 Destroy(collisionOp);
                 break;
 
@@ -170,12 +191,12 @@ public class ShapeTile : Tile
 
     private void Awake()
     {
-        ShapeTileManger.RegisterShapeTile(this);
+        ShapeTileManager.RegisterShapeTile(this);
     }
 
     private void OnDestroy()
     {
-        ShapeTileManger.UnregisterShapeTile(this);
+        ShapeTileManager.UnregisterShapeTile(this);
     }
 
 }

@@ -8,21 +8,29 @@ using static UnityEditor.PlayerSettings;
 
 public class ShapeTile : Tile
 {
+    public Stack<int> moveDirectionStack = new Stack<int>();
     private Queue<Vector2> pathQueue = new Queue<Vector2>();
+    private AudioSource audioSource;
     private List<ShapeTile> sameATiles;
-    private bool[] HasL_Op = { false, false }; // 0번은 and, 1번은 or 
 
+    public bool hasLOp = false;
     public bool IsTriggered = false;
     public bool canGO = false;
+    private bool isMoving = false;
+
     public GameObject collisionOp;
+
     Module currentModule;
     Vector2 currentPos;
     Vector2 endPos;
     public int thisA = 65;
 
-    private bool isMoving = false;
-    private Stack<int> moveDirectionStack = new Stack<int>();
-
+    private void Start()
+    {
+        audioSource = GetComponent<AudioSource>();
+        audioSource.playOnAwake = false;
+        List<ShapeTile> sameATiles = ShapeTileManager.GetTilesWithSameA(thisA);
+    }
     void Update()
     {
         currentPos = this.GetPos();
@@ -46,14 +54,12 @@ public class ShapeTile : Tile
     }
     public void RecieveSignal()
     {
-        //Debug.Log("Received Signal: " + this.gameObject.name);
         if (!isMoving)
             this.canGO = true;
     }
 
     public void RecieveStopSignal()
     {
-        //Debug.Log("Received Signal: " + this.gameObject.name);
         StopAllCoroutines();
         canGO = false;
     }
@@ -71,7 +77,6 @@ public class ShapeTile : Tile
                 //Debug.Log("Resetting all tiles to unvisited as no unvisited neighbors found.");
                 currentModule.ResetVisited();
                 ShapeTileManager.ResetTilesIfConditionMet();
-
             }
 
             int x = 0, y = 0;
@@ -87,61 +92,76 @@ public class ShapeTile : Tile
 
             newEndPos = currentPos + new Vector2(x, y) * 1.0f;
             targetTile = currentModule.SearchModuleTile(moduleNum, newEndPos);
-            //Debug.Log($"Attempting to move from {currentPos} to {newEndPos}");
 
-            if (targetTile != null && targetTile.moduleNum == currentModule.moduleNum && !targetTile.visited)
+            if (targetTile != null && targetTile.isModule && !targetTile.visited)
             {
+                float frequency = CalculateFrequency(thisA, newEndPos);
+                audioSource.pitch = frequency / 440.0f;
+                audioSource.Play();
                 break; // 유효한 타일을 찾았으면 루프 종료
             }
         }
-
-        yield return null;
+        Debug.Log("target tile module num: " + targetTile.moduleNum);
+        yield return new WaitForSeconds(0.3f);
+        audioSource.Play();  ///////////////////뭔가 여기 버그있는 것 같은데 몰르겠당... 
 
         this.transform.position = newEndPos;
         targetTile.visited = true;
-        moveDirectionStack.Push(randDir);
+        if (ShapeTileManager.OpSign[0] || ShapeTileManager.OpSign[1]) {
+            Debug.Log("move direction recorded:" + randDir);
+            moveDirectionStack.Push(randDir); }
+        
 
         if (previousTile != null)
-            StartCoroutine(previousTile.FlashWhite(0.2f));
+            StartCoroutine(previousTile.FlashWhite(0.1f));
 
         isMoving = false;
     }
 
+    private float CalculateFrequency(int thisA, Vector2 position)
+    {
+        return 220.0f + (thisA * 10) + (position.x - position.y) * 100.0f;
+    }
 
     public void CollisionOp(GameObject gameObject)
     {
         string name = gameObject.name;
         Debug.Log("collision operator name is " + name);
-            switch (name)
+        if(sameATiles != null) 
+            foreach (ShapeTile tile in sameATiles) { tile.RecieveStopSignal(); }
+        switch (name)
             {   
                 case "plus":
                     thisA++;
-                    //foreach (ShapeTile tile in sameATiles) { tile.RecieveStopSignal(); }
-                    Debug.Log("o");
-                    //sameATiles = ShapeTileManager.GetTilesWithSameA(thisA);
-                    break;
+                    CheckThisA();
+                break;
 
                 case "minus":
                     thisA--;
-                    //foreach (ShapeTile tile in sameATiles) { tile.RecieveStopSignal(); }
-                    //sameATiles = ShapeTileManager.GetTilesWithSameA(thisA);
-                    break;
+                    CheckThisA();
+                break;
 
                 case "and":
-                    if (HasL_Op[1])
-                        HasL_Op[1] = false;
-                    HasL_Op[0] = true;
-                Debug.Log("and met");
+                if (ShapeTileManager.OpSign[1])
+                    ShapeTileManager.OpSign[1] = false;
+
+                ShapeTileManager.OpSign[0] = true;
+                hasLOp = true;
+                Debug.Log("and met, set OpSign[0] true");
                 break;
 
                 case "or":
-                    if (HasL_Op[0])
-                        HasL_Op[0] = false;
-                    HasL_Op[1] = true;
+                    if (ShapeTileManager.OpSign[0])
+                    ShapeTileManager.OpSign[0] = false;
+
+                ShapeTileManager.OpSign[1] = true;
+                Debug.Log("OR met, set OpSign[1] true");
+                hasLOp = true;
 
                     break;
             }
         Destroy(gameObject);
+        sameATiles = ShapeTileManager.GetTilesWithSameA(thisA);
     }
 
 
@@ -210,6 +230,12 @@ public class ShapeTile : Tile
     private void OnDestroy()
     {
         ShapeTileManager.UnregisterShapeTile(this);
+    }
+
+    public void CheckThisA()
+    {
+        if (thisA > 90) thisA = 65;
+        else if (thisA < 65) thisA = 90;
     }
 
 }

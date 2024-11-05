@@ -8,6 +8,7 @@ using static UnityEditor.PlayerSettings;
 public class ShapeTile : Tile
 {
     private Queue<Vector2> pathQueue = new Queue<Vector2>();
+    private bool[] HasL_Op = { false, false }; // 0번은 and, 1번은 or 
 
     public bool IsTriggered = false;
     public bool canGO = false;
@@ -18,6 +19,7 @@ public class ShapeTile : Tile
     public int thisA = 65;
 
     private bool isMoving = false;
+    private Stack<int> moveDirectionStack = new Stack<int>();
 
     void Update()
     {
@@ -35,14 +37,23 @@ public class ShapeTile : Tile
 
     private IEnumerator MoveCoroutine()
     {
+        int randDir;
         Vector2 newEndPos;
-        Tile targetTile;
-        ModuleTile previousTile = GameManager.SearchTile(currentPos) as ModuleTile;  // 이전 위치의 ModuleTile
+        ModuleTile targetTile;
+        ModuleTile previousTile = currentModule.SearchModuleTile(moduleNum, currentPos);
 
-        do
+        while (true)
         {
+            if (!currentModule.CheckForUnvisitedNeighbors(currentPos))
+            {
+                Debug.Log("Resetting all tiles to unvisited as no unvisited neighbors found.");
+                currentModule.ResetVisited();
+                GameManager.ResetTilesIfConditionMet();
+
+            }
+
             int x = 0, y = 0;
-            int randDir = Random.Range(0, 4);
+            randDir = Random.Range(0, 4);
 
             switch (randDir)
             {
@@ -51,26 +62,35 @@ public class ShapeTile : Tile
                 case 2: x = 1; break;   // Right
                 case 3: x = -1; break;  // Left
             }
+
+            // 새로운 위치를 계산
             newEndPos = currentPos + new Vector2(x, y) * 1.0f;
 
-            targetTile = GameManager.SearchTile(newEndPos);
-            if (targetTile == null)
+            targetTile = currentModule.SearchModuleTile(moduleNum, newEndPos);
+
+            // 타일 유효성 및 방문 여부 확인
+            if (targetTile != null && targetTile.moduleNum == currentModule.moduleNum && !targetTile.visited)
             {
-                Debug.Log("null reference");
-                break;
+                break; // 유효한 타일을 찾았으면 루프 종료
             }
         }
-        while (targetTile == null || targetTile.moduleNum != currentModule.moduleNum);
 
         yield return new WaitForSeconds(1.0f);
 
+        // 새로운 위치로 이동
         this.transform.position = newEndPos;
+        targetTile.visited = true;
+        moveDirectionStack.Push(randDir);
+
+        // 이전 타일을 흰색으로 깜빡임 처리
         if (previousTile != null)
         {
             StartCoroutine(previousTile.FlashWhite(0.1f));
         }
+
         isMoving = false;
     }
+
 
     public void CollisionOp()
     {
@@ -81,23 +101,34 @@ public class ShapeTile : Tile
                 thisA++;
                 Destroy(collisionOp);
                 break;
+
             case "minus":
                 thisA--;
                 Destroy(collisionOp);
                 break;
+
             case "and":
+                if (HasL_Op[1])
+                    HasL_Op[1] =false;
+                HasL_Op[0] = true;
                 Destroy(collisionOp);
                 break;
+
             case "or":
+                if (HasL_Op[0])
+                    HasL_Op[0] = false;
+                HasL_Op[1] = true;
                 Destroy(collisionOp);
                 break;
+
             case "canGO":
                 canGO = true;
-                Debug.Log("cnaGo");
                 break;
         }
 
     }
+
+
 
     private void OnTriggerStay2D(Collider2D other)
     {
@@ -133,14 +164,22 @@ public class ShapeTile : Tile
         }
     }
 
-    public Vector2 SetRandEndPos()
+    // GameManager에서 호출할 수 있는 이동 기록 초기화 메서드
+    public void ClearMoveHistory()
     {
-        int size = currentModule.size;
-        int startX = currentModule.startX;
-        int startY = currentModule.startY;
-        if (currentPos != new Vector2(startX, startY)) {
-        return new Vector2(startX + size, startY + size);
-        }
-        else { return new Vector2(startX, startY); }
+        moveDirectionStack.Clear();
     }
+
+    private void Awake()
+    {
+        // 생성될 때 GameManager에 등록
+        GameManager.RegisterShapeTile(this);
+    }
+
+    private void OnDestroy()
+    {
+        // 파괴될 때 GameManager에서 제거
+        GameManager.UnregisterShapeTile(this);
+    }
+
 }

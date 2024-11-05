@@ -5,6 +5,7 @@ using UnityEngine;
 public class ModuleTile : Tile
 {
     SpriteRenderer render;
+    public bool visited = false;
     private void Start()
     {
         render = GetComponent<SpriteRenderer>();
@@ -13,6 +14,6 @@ public class ModuleTile : Tile
     {
         render.color = Color.white;  // 흰색으로 변경
         yield return new WaitForSeconds(duration);
-        render.color = Color.black;  // 검은색으로 되돌림
+        render.color = Color.black;
     }
 }

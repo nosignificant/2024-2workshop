@@ -48,7 +48,7 @@ public class ShapeTile : Tile
             {
                 Debug.Log("Resetting all tiles to unvisited as no unvisited neighbors found.");
                 currentModule.ResetVisited();
-                GameManager.ResetTilesIfConditionMet();
+                ShapeTileManger.ResetTilesIfConditionMet();
 
             }
 
@@ -129,7 +129,6 @@ public class ShapeTile : Tile
     }
 
 
-
     private void OnTriggerStay2D(Collider2D other)
     {
         if (other.gameObject.CompareTag("module"))
@@ -164,7 +163,6 @@ public class ShapeTile : Tile
         }
     }
 
-    // GameManager에서 호출할 수 있는 이동 기록 초기화 메서드
     public void ClearMoveHistory()
     {
         moveDirectionStack.Clear();
@@ -172,14 +170,12 @@ public class ShapeTile : Tile
 
     private void Awake()
     {
-        // 생성될 때 GameManager에 등록
-        GameManager.RegisterShapeTile(this);
+        ShapeTileManger.RegisterShapeTile(this);
     }
 
     private void OnDestroy()
     {
-        // 파괴될 때 GameManager에서 제거
-        GameManager.UnregisterShapeTile(this);
+        ShapeTileManger.UnregisterShapeTile(this);
     }
 
 }

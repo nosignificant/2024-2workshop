@@ -2,9 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
-using UnityEditor.Experimental.GraphView;
+using TMPro;
 using UnityEngine;
-using static UnityEditor.PlayerSettings;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -14,37 +14,41 @@ public class GameManager : MonoBehaviour
     public ModuleTile moduleTilePrefab;
 
     public GameObject parent;
+    public GameObject GameendText;
 
-    public static Module[] moduleMap; // 모듈 번호 저장 array
+
+    public static List<Module> moduleMap = new List<Module>();
+
     public static Tile[,] mapArray;
     
     public static int col, row;
+    public static bool GameEnd = false;
+
 
     void Start()
     {
-        moduleMap = new Module[4];
+        Scene scene = SceneManager.GetActiveScene();
+
+        GameendText.SetActive(false);
         parent = GameObject.Find("parent");
 
-        // 배열의 크기를 설정하고 초기화
-        row = 20;
-        col = 20;
-        mapArray = new Tile[row, col];
+        Map.SetMap(scene.name);
 
-        //public Module(int moduleNum, int startX, int startY, int sizeX, int sizeY)
-        moduleMap[1] = new Module(1,1,1,3,4);
-        moduleMap[2] = new Module(2,5,5,3,2);
-        moduleMap[3] = new Module(3, 1, 6, 10, 1);
+
 
         // 지도 생성
         CreateMap(row, col);
-        for(int i = 1; i < 4; i++)
+        for(int i = 0; i < moduleMap.Count; i++)
         {
-            moduleMap[i].CreateModule();
+            moduleMap[i].CreateModule();    
             ModuleTileInstiate(i,parent.transform);
         }
-
-
         // 모듈 생성
+    }
+
+    private void Update()
+    {
+        if (GameEnd) { GameendText.SetActive(true); }
     }
 
     void CreateMap(int row, int col)

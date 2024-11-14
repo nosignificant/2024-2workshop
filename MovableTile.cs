@@ -9,6 +9,7 @@ public class MovableTile : Tile
     Vector2 startPos;
     Vector2 endPos;
     Vector2 direction;
+    public int thisA = 0;
 
     private void OnTriggerEnter2D(Collider2D other)
     {
@@ -55,7 +56,7 @@ public class MovableTile : Tile
 
                 if (distanceX <= threshold && distanceY <= threshold)
                 {
-                    this.transform.position = new Vector3(tilePos.x, tilePos.y, this.transform.position.z);
+                    this.transform.position = new Vector3(tilePos.x, tilePos.y, 6   );
                     return;
                 }
             }

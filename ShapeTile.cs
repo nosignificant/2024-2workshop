@@ -4,7 +4,7 @@ using TMPro.Examples;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using static UnityEditor.PlayerSettings;
+using UnityEngine.UIElements;
 
 public class ShapeTile : Tile
 {
@@ -16,11 +16,12 @@ public class ShapeTile : Tile
     public bool hasLOp = false;
     public bool IsTriggered = false;
     public bool canGO = false;
-    private bool isMoving = false;
+    public bool isMoving = false;
+    private float waitingTime;
 
     public GameObject collisionOp;
 
-    Module currentModule;
+    public Module currentModule;
     Vector2 currentPos;
     Vector2 endPos;
     public int thisA = 65;
@@ -37,11 +38,10 @@ public class ShapeTile : Tile
     }
     public void StartMoveSignal()
     {
-        if (!isMoving && canGO)
+        if (!isMoving)
         {
             isMoving = true;
             StartCoroutine(MoveCoroutine());
-
             List<ShapeTile> sameATiles = ShapeTileManager.GetTilesWithSameA(thisA);
             foreach (ShapeTile tile in sameATiles)
             {
@@ -62,13 +62,13 @@ public class ShapeTile : Tile
     {
         StopAllCoroutines();
         canGO = false;
+        isMoving = false;
     }
     private IEnumerator MoveCoroutine()
     {
         int randDir;
         Vector2 newEndPos;
         ModuleTile targetTile;
-        ModuleTile previousTile = currentModule.SearchModuleTile(moduleNum, currentPos);
 
         while (true)
         {
@@ -95,32 +95,45 @@ public class ShapeTile : Tile
 
             if (targetTile != null && targetTile.isModule && !targetTile.visited)
             {
-                float frequency = CalculateFrequency(thisA, newEndPos);
-                audioSource.pitch = frequency / 440.0f;
-                audioSource.Play();
+                LetSoundPlay(randDir, newEndPos);
+
                 break; // 유효한 타일을 찾았으면 루프 종료
             }
         }
-        Debug.Log("target tile module num: " + targetTile.moduleNum);
-        yield return new WaitForSeconds(0.3f);
-        audioSource.Play();  ///////////////////뭔가 여기 버그있는 것 같은데 몰르겠당... 
+
+        yield return new WaitForSeconds(0.2f);
+///////////////////뭔가 여기 버그있는 것 같은데 몰르겠당... 
 
         this.transform.position = newEndPos;
         targetTile.visited = true;
-        if (ShapeTileManager.OpSign[0] || ShapeTileManager.OpSign[1]) {
-            Debug.Log("move direction recorded:" + randDir);
-            moveDirectionStack.Push(randDir); }
-        
-
-        if (previousTile != null)
-            StartCoroutine(previousTile.FlashWhite(0.1f));
-
         isMoving = false;
+
+        if (ShapeTileManager.OpSign[0] || ShapeTileManager.OpSign[1]) {
+            moveDirectionStack.Push(randDir); }
     }
 
     private float CalculateFrequency(int thisA, Vector2 position)
     {
         return 220.0f + (thisA * 10) + (position.x - position.y) * 100.0f;
+    }
+
+    private void LetSoundPlay(int randDir, Vector2 position)
+    {
+        float frequency = CalculateFrequency(thisA, position);
+        audioSource.pitch = frequency / 440.0f;
+        for (int i = 1; i <= randDir; i++) { audioSource.Play(); }
+
+        StartCoroutine(PlaySoundRand(randDir));
+    }
+
+    private IEnumerator PlaySoundRand(int randDir)
+    {
+        for (int i = 0; i < randDir; i++)
+        {
+            waitingTime = Random.Range(0.1f, 1.0f);
+            yield return new WaitForSeconds(waitingTime);
+            audioSource.Play();
+        }
     }
 
     public void CollisionOp(GameObject gameObject)
@@ -134,11 +147,19 @@ public class ShapeTile : Tile
                 case "plus":
                     thisA++;
                     CheckThisA();
+                foreach (ShapeTile tile in ShapeTileManager.allShapeTiles)
+                {
+                    tile.RecieveStopSignal();
+                }
                 break;
 
                 case "minus":
                     thisA--;
                     CheckThisA();
+                foreach (ShapeTile tile in ShapeTileManager.allShapeTiles)
+                {
+                    tile.RecieveStopSignal();
+                }
                 break;
 
                 case "and":

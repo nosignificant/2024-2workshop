@@ -1,21 +1,38 @@
-// PlayerMove.cs
+
 using System.Collections;
 using System.Collections.Generic;
+using TMPro.Examples;
 using UnityEngine;
 
 public class PlayerMove : Tile
 {
-    private bool readyToMove = true;
+    public GameObject[] rotatePrefabs = new GameObject[3]; // 1 2 3 
+    public GameObject[] counterPrefabs = new GameObject[3]; // 4 5 6
+    public GameObject diagonal; // 7
+    public GameObject[] paustop = new GameObject[2]; // 8 
+    public GameObject[] dotPrefabs = new GameObject[2]; // 9 10
+
+    public GameObject moveParent;
+
     public static int playerMoveX, playerMoveY;
     public static Vector2 playerMove;
+    private SpriteRenderer spriteRenderer;
+    private bool readyToMove = true;
+
     Vector2 startPos;
     Vector2 endPos;
 
-    // 전역으로 유지될 변수
+    public static Dictionary<Vector2, GameObject> tilePrefabs = new Dictionary<Vector2, GameObject>();
     public static Vector2 lastDirection = Vector2.zero;
 
+    void Start()
+    {
+        moveParent = GameObject.Find("moveParent");
+        StartCoroutine(BlinkCursor());
+    }
     void Update()
     {
+        PlayerNumInput(base.GetPos());
         if (readyToMove)
         {
             playerMove = ApplyUserInput();
@@ -24,13 +41,35 @@ public class PlayerMove : Tile
             if (playerMove != Vector2.zero)
             {
                 readyToMove = false;
-                lastDirection = playerMove; // 마지막 입력된 방향 저장
+                lastDirection = playerMove; 
                 StartCoroutine(Move(playerMove));
             }
         }
-
-        SearchPos();
     }
+
+    private IEnumerator Move(Vector2 playerMove)
+    {
+
+        int targetX = (int)base.GetPos().x + (int)playerMove.x;
+        int targetY = (int)base.GetPos().y + (int)playerMove.y;
+
+        Vector3 newPosition = new Vector3(targetX, targetY, 1);
+        transform.position = newPosition;
+
+        yield return new WaitForSeconds(0.1f);
+        readyToMove = true;
+    }
+
+  /*  bool isOccupiedFar(Vector2 farPos)
+    {
+        bool[] farBool = GameManager.mapArray[(int)farPos.x, (int)farPos.y].GetIsSign();
+        foreach (bool flag in farBool)
+        {
+            if (flag)
+                return true;
+        }
+        return false;
+    }*/
 
     public static Vector2 ApplyUserInput()
     {
@@ -55,37 +94,86 @@ public class PlayerMove : Tile
         }
         return new Vector2(playerMoveX, playerMoveY);
     }
-
-    private IEnumerator Move(Vector2 playerMove)
+    public void PlayerNumInput(Vector2 pos)
     {
-        startPos = base.GetPos();
-        endPos = startPos + playerMove * 1.0f;
-        this.transform.position = endPos;
+        GameObject existingPrefab = null;
+        GameObject prefabToInstantiate = null;
 
-        yield return new WaitForSeconds(0.1f);
-        readyToMove = true;
+        tilePrefabs.TryGetValue(pos, out existingPrefab);
+
+        if (Input.GetKeyDown(KeyCode.E)) //E
+        {
+            Debug.Log("Alpha1 pressed");
+            prefabToInstantiate = GetNextPrefab(rotatePrefabs, existingPrefab != null ? existingPrefab.GetComponent<Tile>().isTrueSignHere() : 0);
+            HandlePrefab(pos, existingPrefab);
+        }
+        else if (Input.GetKeyDown(KeyCode.Q)) //Q
+        {
+            Debug.Log("Alpha2 pressed");
+            prefabToInstantiate = GetNextPrefab(counterPrefabs, existingPrefab != null ? existingPrefab.GetComponent<Tile>().isTrueSignHere() : 0);
+            HandlePrefab(pos, existingPrefab);
+        }
+        else if (Input.GetKeyDown(KeyCode.R)) //R
+        {
+            prefabToInstantiate = diagonal;
+            HandlePrefab(pos, existingPrefab);
+        } 
+        else if (Input.GetKeyDown(KeyCode.F)) //Space
+        {
+            prefabToInstantiate = GetNextPrefab(paustop, existingPrefab != null ? existingPrefab.GetComponent<Tile>().isTrueSignHere() : 0);
+            HandlePrefab(pos, existingPrefab);
+        }
+        //프리팹 활성화 코드 
+            if (prefabToInstantiate != null)
+        {
+            GameObject newPrefab = Instantiate(prefabToInstantiate, moveParent.transform);
+            newPrefab.transform.position = new Vector3(pos.x, pos.y, 0);
+            Debug.Log("Instantiated " + prefabToInstantiate.name + " at position " + pos);
+            tilePrefabs[pos] = newPrefab;
+
+            foreach (var kvp in tilePrefabs)
+            {
+                Debug.Log($"Tile prefab at {kvp.Key}: {kvp.Value.name}");
+            }
+        }
     }
 
-    public void SearchPos()
+
+    private GameObject GetNextPrefab(GameObject[] prefabArray, int currentSign)
     {
-        for (int i = 0; i < GameManager.row; i++)
+        if (currentSign == 0) return prefabArray[0];
+        for (int i = 0; i < prefabArray.Length; i++)
         {
-            for (int j = 0; j < GameManager.col; j++)
+            if (prefabArray[i].GetComponent<Tile>().isTrueSignHere() == currentSign)
+                return i + 1 < prefabArray.Length ? prefabArray[i + 1] : null;
+        }
+        return null;
+    }
+
+    private void HandlePrefab(Vector2 pos, GameObject existingPrefab)
+    {
+        if (existingPrefab != null)
+        {
+            Debug.Log("Destroying " + existingPrefab.name);
+            Destroy(existingPrefab);
+            tilePrefabs.Remove(pos);
+        }
+    }
+
+    private IEnumerator BlinkCursor()
+    {
+        SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
+        if (spriteRenderer != null)
+        {
+            Color originalColor = spriteRenderer.color;
+            Color blinkColor = Color.black; // 깜빡일 때의 색상
+
+            while (true) // 무한 반복
             {
-                Tile tileComponent = GameManager.mapArray[i, j].GetComponent<Tile>();
-                Vector2 tilePos = tileComponent.transform.position;
-                Vector2 thisPos = this.transform.position;
-
-                // thisPos가 tilePos와 근접한 위치에 있는지 확인
-                float distanceX = Mathf.Abs(thisPos.x - tilePos.x);
-                float distanceY = Mathf.Abs(thisPos.y - tilePos.y);
-                float threshold = 0.3f; // 범위를 설정하여 어느 정도 근접한지 확인
-
-                if (distanceX <= threshold && distanceY <= threshold)
-                {
-                    this.transform.position = new Vector3(tilePos.x, tilePos.y, this.transform.position.z);
-                    return;
-                }
+                spriteRenderer.color = blinkColor;
+                yield return new WaitForSeconds(0.5f); // 0.5초 대기
+                spriteRenderer.color = originalColor;
+                yield return new WaitForSeconds(0.5f); // 0.5초 대기
             }
         }
     }

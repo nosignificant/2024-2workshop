@@ -2,11 +2,9 @@ using UnityEngine;
 
 public class Tile : MonoBehaviour
 {
-    private int tileX; // 타일의 X 인덱스
-    private int tileY; // 타일의 Y 인덱스
-    public bool isModule = false;
-    public int moduleNum = 0;
-
+    public int x; // 타일의 X 인덱스
+    public int y; // 타일의 Y 인덱스
+    public bool[] sign = new bool[8];
 
     public Vector2 GetPos()
     {
@@ -15,12 +13,12 @@ public class Tile : MonoBehaviour
 
     public int GetTileNumX()
     {
-        return tileX;
+        return x;
     }
 
     public int GetTileNumY()
     {
-        return tileY;
+        return y;
     }
 
 
@@ -31,16 +29,36 @@ public class Tile : MonoBehaviour
 
     public void SetTileNum(int x, int y)
     {
-        this.tileX = x;
-        this.tileY = y;
+        this.x = x;
+        this.y = y;
     }
 
-    public void YesModuleNum()
+    public bool[] GetIsSign()
     {
-        this.isModule = true;
+        return sign;
     }
 
-    public bool IsModule() {
-        return isModule;
+    public void SetIsSign(int index, bool status)
+    {
+        sign[index] = status;
+    }
+
+    public void SetAllFalseSign()
+    {
+        for (int i = 0; i < sign.Length; i++)
+            sign[i] = false;
+    }
+
+    public int isTrueSignHere()
+    {
+        for (int i = 0; i < sign.Length; i++)
+            if (sign[i])
+            {
+                Debug.Log("true: " + i);
+                return i;
+            }
+                
+        return 0;
+
     }
 }

@@ -4,35 +4,35 @@ using System.Collections.Generic;
 using TMPro.Examples;
 using UnityEngine;
 
-public class PlayerMove : Tile
+public class PlayerMove : MonoBehaviour
 {
     public GameObject[] rotatePrefabs = new GameObject[3]; // 1 2 3 
     public GameObject[] counterPrefabs = new GameObject[3]; // 4 5 6
     public GameObject diagonal; // 7
-    public GameObject[] paustop = new GameObject[2]; // 8 
+    public GameObject[] paustop = new GameObject[2]; // 8 0
     public GameObject[] dotPrefabs = new GameObject[2]; // 9 10
+    public static Dictionary<Vector2, GameObject> tilePrefabs = new Dictionary<Vector2, GameObject>();
 
+    GameObject square;
     public GameObject moveParent;
-
-    public static int playerMoveX, playerMoveY;
-    public static Vector2 playerMove;
     private SpriteRenderer spriteRenderer;
-    private bool readyToMove = true;
 
+    private bool readyToMove = true;
+    public static int playerMoveX, playerMoveY;
     Vector2 startPos;
     Vector2 endPos;
-
-    public static Dictionary<Vector2, GameObject> tilePrefabs = new Dictionary<Vector2, GameObject>();
+    public static Vector2 playerMove;
     public static Vector2 lastDirection = Vector2.zero;
 
     void Start()
     {
+        square = GameObject.Find("Square");
         moveParent = GameObject.Find("moveParent");
         StartCoroutine(BlinkCursor());
     }
     void Update()
     {
-        PlayerNumInput(base.GetPos());
+        PlayerNumInput(this.transform.position);
         if (readyToMove)
         {
             playerMove = ApplyUserInput();
@@ -49,27 +49,43 @@ public class PlayerMove : Tile
 
     private IEnumerator Move(Vector2 playerMove)
     {
+        Vector2 currentPos = this.transform.position;
+        Vector2 targetPos = currentPos + playerMove;
 
-        int targetX = (int)base.GetPos().x + (int)playerMove.x;
-        int targetY = (int)base.GetPos().y + (int)playerMove.y;
-
-        Vector3 newPosition = new Vector3(targetX, targetY, 1);
-        transform.position = newPosition;
+        if (IsValidPosition(targetPos))
+        {
+            yield return null;
+            this.transform.position = new Vector3(targetPos.x, targetPos.y, this.transform.position.z);
+        }
+        else
+        {
+            Debug.Log($"Cannot move {this.name} to {targetPos} (invalid position or already occupied).");
+            yield return null;
+        }
 
         yield return new WaitForSeconds(0.1f);
         readyToMove = true;
     }
 
-  /*  bool isOccupiedFar(Vector2 farPos)
+    private bool IsValidPosition(Vector2 pos)
     {
-        bool[] farBool = GameManager.mapArray[(int)farPos.x, (int)farPos.y].GetIsSign();
-        foreach (bool flag in farBool)
+        if (square != null)
         {
-            if (flag)
-                return true;
+            BoxCollider2D squareBounds = square.GetComponent<BoxCollider2D>();
+            if (squareBounds != null)
+            {
+                bool withinBounds = (pos.x >= squareBounds.bounds.min.x && pos.x <= squareBounds.bounds.max.x) &&
+                    (pos.y >= squareBounds.bounds.min.y && pos.y <= squareBounds.bounds.max.y);
+                bool obstacles = GameManager.ObstacleTiles.ContainsKey(pos);
+
+                return withinBounds && !obstacles;
+            }
+            else
+                Debug.LogError("Square object does not have a BoxCollider2D.");
         }
-        return false;
-    }*/
+
+        return false; // 기본적으로 false 반환
+    }
 
     public static Vector2 ApplyUserInput()
     {
@@ -100,41 +116,44 @@ public class PlayerMove : Tile
         GameObject prefabToInstantiate = null;
 
         tilePrefabs.TryGetValue(pos, out existingPrefab);
-
-        if (Input.GetKeyDown(KeyCode.E)) //E
+        if (GameManager.isTutorial)
         {
-            Debug.Log("Alpha1 pressed");
-            prefabToInstantiate = GetNextPrefab(rotatePrefabs, existingPrefab != null ? existingPrefab.GetComponent<Tile>().isTrueSignHere() : 0);
-            HandlePrefab(pos, existingPrefab);
-        }
-        else if (Input.GetKeyDown(KeyCode.Q)) //Q
-        {
-            Debug.Log("Alpha2 pressed");
-            prefabToInstantiate = GetNextPrefab(counterPrefabs, existingPrefab != null ? existingPrefab.GetComponent<Tile>().isTrueSignHere() : 0);
-            HandlePrefab(pos, existingPrefab);
-        }
-        else if (Input.GetKeyDown(KeyCode.R)) //R
-        {
-            prefabToInstantiate = diagonal;
-            HandlePrefab(pos, existingPrefab);
-        } 
-        else if (Input.GetKeyDown(KeyCode.F)) //Space
-        {
-            prefabToInstantiate = GetNextPrefab(paustop, existingPrefab != null ? existingPrefab.GetComponent<Tile>().isTrueSignHere() : 0);
-            HandlePrefab(pos, existingPrefab);
-        }
-        //프리팹 활성화 코드 
-            if (prefabToInstantiate != null)
-        {
-            GameObject newPrefab = Instantiate(prefabToInstantiate, moveParent.transform);
-            newPrefab.transform.position = new Vector3(pos.x, pos.y, 0);
-            Debug.Log("Instantiated " + prefabToInstantiate.name + " at position " + pos);
-            tilePrefabs[pos] = newPrefab;
-
-            foreach (var kvp in tilePrefabs)
+            if (Input.GetKeyDown(KeyCode.E)) //E
             {
-                Debug.Log($"Tile prefab at {kvp.Key}: {kvp.Value.name}");
+                Debug.Log("Alpha1 pressed");
+                prefabToInstantiate = GetNextPrefab(rotatePrefabs, existingPrefab != null ? existingPrefab.GetComponent<Tile>().isTrueSignHere() : 0);
+                HandlePrefab(pos, existingPrefab);
             }
+            else if (Input.GetKeyDown(KeyCode.Q)) //Q
+            {
+                Debug.Log("Alpha2 pressed");
+                prefabToInstantiate = GetNextPrefab(counterPrefabs, existingPrefab != null ? existingPrefab.GetComponent<Tile>().isTrueSignHere() : 0);
+                HandlePrefab(pos, existingPrefab);
+            }
+            else if (Input.GetKeyDown(KeyCode.R)) //R
+            {
+                prefabToInstantiate = diagonal;
+                HandlePrefab(pos, existingPrefab);
+            }
+            else if (Input.GetKeyDown(KeyCode.F)) //Space
+            {
+                prefabToInstantiate = GetNextPrefab(paustop, existingPrefab != null ? existingPrefab.GetComponent<Tile>().isTrueSignHere() : 0);
+                HandlePrefab(pos, existingPrefab);
+            }
+            //프리팹 활성화 코드 
+            if (prefabToInstantiate != null)
+            {
+                GameObject newPrefab = Instantiate(prefabToInstantiate, moveParent.transform);
+                newPrefab.transform.position = new Vector3(pos.x, pos.y, 0);
+                Debug.Log("Instantiated " + prefabToInstantiate.name + " at position " + pos);
+                tilePrefabs[pos] = newPrefab;
+
+                foreach (var kvp in tilePrefabs)
+                {
+                    Debug.Log($"Tile prefab at {kvp.Key}: {kvp.Value.name}");
+                }
+            }
+ 
         }
     }
 

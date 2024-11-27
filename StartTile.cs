@@ -33,75 +33,84 @@ public class StartTile : Tile
             }
         }
 
-        // 움직임 중이 아닐 때만 CheckMoveSign 실행
         if (!start && !isMoving)
-            StartCoroutine(CheckMoveSign());
+            StartCoroutine(CheckSign(PrefabAssign()));
     }
 
-    private IEnumerator CheckMoveSign()
+    private Tile PrefabAssign()
     {
-        isMoving = true; // 움직임 시작 플래그 설정
-
         Vector2 currentPos = base.GetPos();
+        Tile currentTile = null; // null로 초기화
 
-        if (PlayerMove.tilePrefabs.TryGetValue(currentPos, out GameObject currentPrefab))
+        if (GameManager.isTutorial && PlayerMove.tilePrefabs.TryGetValue(currentPos, out GameObject currentPrefab))
         {
-            Tile currentTile = currentPrefab.GetComponent<Tile>();
-            if (currentTile != null)
-            {
-                int signNow = currentTile.isTrueSignHere();
-                switch (signNow)
-                {
-                    case 0:
-                        start = true;
-                        if (Alphabet.FindConsonant(signs) != null)
-                        {
-                            displayedConsonants.Add(Alphabet.FindConsonant(signs));
-                            GameManager.text.text = string.Concat(displayedConsonants);
-                        }
-                        break;
-                    case 1:
-                        yield return Clock(); break;
-                    case 2:
-                        yield return DoubleClock(); break;
-                    case 3:
-                        yield return UTurn(); break;
-                    case 4:
-                        yield return Counter(); break;
-                    case 5:
-                        yield return DoubleCounter(); break;
-                    case 6:
-                        yield return ReverseUTurn(); break;
-                    case 7:
-                        yield return Diagonal(); break;
-                    case 8:
-                        yield return Pause(); break;
-                    case 9: //yield return dot();
-
-                    case 10:
-                    //yield return dot2();
-                        
-                        
-
-                    default: Debug.LogWarning($"Unexpected sign: {signNow}"); break;
-                }
-                if (signNow != 0)
-                    signs.Add(signNow);
-            }
-            else
-            {
-                Debug.LogWarning($"Tile component missing on prefab at {currentPos}");
-            }
+            currentTile = currentPrefab.GetComponent<Tile>();
+            return currentTile;
         }
         else
         {
-            Debug.LogWarning($"No prefab found at {currentPos}");
+            if (GameManager.MovingTile.TryGetValue(currentPos, out GameObject curtPrefab))
+            {
+                currentTile = curtPrefab.GetComponent<Tile>();
+                return currentTile;
+            }
+        }
+
+        return currentTile;
+    }
+    private IEnumerator CheckSign(Tile currentTile)
+    {
+        isMoving = true; // 움직임 시작 플래그 설
+
+        if (currentTile != null)
+        {
+            int signNow = currentTile.isTrueSignHere();
+            switch (signNow)
+            {
+                case 0:
+                    start = true;
+                    if (Alphabet.FindConsonant(signs) != null)
+                    {
+                        displayedConsonants.Add(Alphabet.FindConsonant(signs));
+                        GameManager.text.text = string.Concat(displayedConsonants);
+                    }
+                    break;
+                case 1:
+                    yield return Clock(); break;
+                case 2:
+                    yield return DoubleClock(); break;
+                case 3:
+                    yield return UTurn(); break;
+                case 4:
+                    yield return Counter(); break;
+                case 5:
+                    yield return DoubleCounter(); break;
+                case 6:
+                    yield return ReverseUTurn(); break;
+                case 7:
+                    yield return Diagonal(); break;
+                case 8:
+                    //안쓸거임 pause prefab지우셈 
+                case 9: //yield return dot();
+
+                case 10:
+                //yield return dot2();
+
+                default: 
+                    yield return Pause();
+                    signs.Add(8);
+                    break;
+            }
+                signs.Add(signNow);
+            Debug.Log("add " + signNow);
         }
 
         yield return new WaitForSeconds(0.5f); // 다음 움직임까지 대기
         isMoving = false; // 움직임 종료 플래그 해제
     }
-
+    /// <summary>
+    /// IENUMERATOR ///
+    /// </summary>
     private IEnumerator Clock()
     {
         RotateClock();
@@ -181,7 +190,9 @@ public class StartTile : Tile
         MoveForward();
     }
 
-
+    /// <summary>
+    /// FUNCTIONS FOR IENUMERATOR ///
+    /// </summary>
     void MoveForward()
     {
         startPos = base.GetPos();
@@ -200,6 +211,8 @@ public class StartTile : Tile
             currentDir = Vector2.up;
         else if (currentDir == Vector2.up)
             currentDir = Vector2.right;
+
+        Debug.Log("current direction" +  currentDir);
     }
 
     private void RotateCounter()
@@ -213,6 +226,8 @@ public class StartTile : Tile
             currentDir = Vector2.down;
         else if (currentDir == Vector2.down) 
             currentDir = Vector2.right;
+
+        Debug.Log("current direction" + currentDir);
     }
 
     private void RotateDiagonal()
@@ -234,6 +249,8 @@ public class StartTile : Tile
             currentDir = new Vector2(1, -1);
         else if (currentDir == new Vector2(1, -1)) // ↘ →
             currentDir = Vector2.right;
+
+        Debug.Log("diagonal move, current direction: " + currentDir);
     }
 
 }

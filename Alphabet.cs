@@ -7,20 +7,39 @@ public class Alphabet : MonoBehaviour
 
     public static Dictionary<int, (string character, int[] sequence)> consonant = new Dictionary<int, (string, int[])>
     {
-        { 1, ("ぁ", new int[] { 1 }) },       
-        { 2, ("い", new int[] { 4 }) },       
-        { 3, ("ぇ", new int[] { 2 }) },
-        { 4, ("ぉ", new int[] { 2,5 }) },
-        { 5, ("け", new int[] { 3 }) },
-        { 6, ("げ", new int[] { 2, }) },
-        { 7, ("さ", new int[] { 3 }) },
-        { 8, ("し", new int[] { 3 }) },
-        { 9, ("じ", new int[] { 3 }) },
-        { 10, ("ず", new int[] { 3 }) },
-        { 11, ("せ", new int[] { 3 }) },
-        { 12, ("ぜ", new int[] { 3 }) },
-        { 13, ("そ", new int[] { 3 }) },
-        { 14, ("ぞ", new int[] { 3 }) },
+        { 1, ("ぁ", new int[] { 1 , 0}) },
+        { 2, ("い", new int[] { 4, 0 }) },
+        { 3, ("ぇ", new int[] { 2,0 }) },
+        { 4, ("ぉ", new int[] { 2,5,0 }) },
+        { 5, ("け", new int[] { 3,0 }) },
+        { 6, ("げ", new int[] { 2,8,0 }) },
+        { 7, ("さ", new int[] { 7,0 }) },
+        { 8, ("し", new int[] { 0 }) },
+        { 9, ("じ", new int[] { 7,8 , 0 }) },
+        { 10, ("ず", new int[] { 8,7,8,0 }) },
+        { 11, ("せ", new int[] { 1,8,0 }) },
+        { 12, ("ぜ", new int[] { 8,2,0 }) },
+        { 13, ("そ", new int[] { 8,8,8,0 }) },
+        { 14, ("ぞ", new int[] { 8,8,0 }) },
+
+    };
+
+    public static Dictionary<int, (string character, int[] sequence)> vowel = new Dictionary<int, (string, int[])>
+    { // 疎 酔 雌 馬  
+        { 1, ("た", new int[] { 1 }) },
+        { 2, ("ち", new int[] { 4 }) },
+        { 3, ("だ", new int[] { 2 }) },
+        { 4, ("ぢ", new int[] { 2,5 }) },
+        { 5, ("っ", new int[] { 3 }) },
+        { 6, ("づ", new int[] { 2,8 }) },
+        { 7, ("つ", new int[] { 7 }) },
+        { 8, ("て", new int[] {  }) },
+        { 9, ("で", new int[] { 7,8 }) },
+        { 10, ("", new int[] { 8,7,8 }) },
+        { 11, ("ぬ", new int[] { 1,8 }) },
+        { 12, ("ば", new int[] { 8,2 }) },
+        { 13, ("ぱ", new int[] { 8,8,8 }) },
+        { 14, ("び", new int[] { 8,8 }) },
 
     };
 

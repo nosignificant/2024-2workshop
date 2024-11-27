@@ -14,9 +14,11 @@ public class GameManager : MonoBehaviour
     public GameObject parent;
     public GameObject GameText;
     public static TextMeshProUGUI text;
+    public static Dictionary<Vector2, GameObject> MovingTile = new Dictionary<Vector2, GameObject>();
+    public static Dictionary<Vector2, GameObject> ObstacleTiles = new Dictionary<Vector2, GameObject>();
 
 
-    public static int col, row;
+    public static bool isTutorial;
 
 
     void Start()
@@ -26,8 +28,47 @@ public class GameManager : MonoBehaviour
         GameText = GameObject.Find("GameText");
         text = GameText.GetComponent<TextMeshProUGUI>();
 
-       // Map.SetMap(scene.name);
+            RegisterMovingTiles();
 
     }
 
+    public static void RegisterMovingTiles()
+    {
+        Tile[] tiles = FindObjectsOfType<Tile>();
+
+        foreach (Tile tile in tiles)
+        {
+            Vector2 position = new Vector2(tile.transform.position.x, tile.transform.position.y);
+
+            if (!MovingTile.ContainsKey(position))
+            {
+                MovingTile.Add(position, tile.gameObject);
+                Debug.Log($"Registered MovingTile: {tile.gameObject.name} at {position}");
+            }
+            else
+            {
+                Debug.LogWarning($"Duplicate Tile position found at {position}. Skipping: {tile.gameObject.name}");
+            }
+        }
+    }
+
+    public static void RegisterCantMovePlace()
+    {
+        GameObject[] obstacles = GameObject.FindGameObjectsWithTag("Obstacle");
+
+        foreach (GameObject obstacle in obstacles)
+        {
+            Vector2 position = new Vector2(obstacle.transform.position.x, obstacle.transform.position.y);
+
+            if (!ObstacleTiles.ContainsKey(position))
+            {
+                ObstacleTiles.Add(position, obstacle);
+                Debug.Log($"Registered Obstacle: {obstacle.name} at {position}");
+            }
+            else
+            {
+                Debug.LogWarning($"Duplicate Obstacle position found at {position}. Skipping: {obstacle.name}");
+            }
+        }
+    }
 }

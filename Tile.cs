@@ -1,3 +1,4 @@
+using TMPro.Examples;
 using UnityEngine;
 
 public class Tile : MonoBehaviour
@@ -53,10 +54,7 @@ public class Tile : MonoBehaviour
     {
         for (int i = 0; i < sign.Length; i++)
             if (sign[i])
-            {
-                Debug.Log("true: " + i);
                 return i;
-            }
                 
         return 0;
 

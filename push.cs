@@ -5,6 +5,7 @@ public class Push : MonoBehaviour
 {
     public bool isTrigger = false; // 타일이 플레이어에 의해 밀리는 상태
     private Vector2 direction; // 밀리는 방향
+    public bool isMoving;
     GameObject square;
 
      private void OnTriggerEnter2D(Collider2D other)
@@ -13,7 +14,8 @@ public class Push : MonoBehaviour
          {
              isTrigger = true;
              direction = PlayerMove.lastDirection;
-         }
+            StartCoroutine(Move(direction));
+        }
      }
 
     private void Start()
@@ -21,22 +23,14 @@ public class Push : MonoBehaviour
         square = GameObject.Find("Square");
     }
 
-    void Update()
-     {
-         if (isTrigger && !GameManager.isTutorial)
-         {
-             StartCoroutine(Move(direction));
-             isTrigger = false;
-         }
-     }
 
     //push 이동 
      private IEnumerator Move(Vector2 playerMove)
      {
-       Vector2 currentPos = this.transform.position;
+        isTrigger = false;
+        Vector2 currentPos = this.transform.position;
        Vector2 targetPos = currentPos + playerMove;
-        Debug.Log("currentPos : " + currentPos);
-        Debug.Log("targetPos : " + targetPos);
+        Debug.Log(this.name + "currentPos : " + currentPos + "targetPos : " + targetPos);
 
         if (IsValidPosition(targetPos)) {
             yield return null;
@@ -50,7 +44,6 @@ public class Push : MonoBehaviour
             Debug.Log($"Cannot move {this.name} to {targetPos} (invalid position or already occupied).");
             yield break; // 이동 중단
         }
-        Debug.Log($"{this.name} moved to {targetPos}");
     }
 
 

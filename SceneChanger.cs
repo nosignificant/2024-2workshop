@@ -5,27 +5,28 @@ using UnityEngine.SceneManagement;
 
 public class SceneChanger : MonoBehaviour
 {
+    public GameObject GameButton;
     public void tutorial()
     {
         SceneManager.LoadScene("tutorial");
-        GameManager.isTutorial = true;
-        Debug.Log("tutorial true");
+        GameButton = GameObject.Find("NEXT");
+        GameButton.SetActive(false);
+        if (GameManager.gText.text != null)
+            GameButton.SetActive(true);
     }
     public void tutorial1()
     {
-        SceneManager.LoadScene("tutorial1");
-        GameManager.isTutorial = true;
+        SceneManager.LoadScene("tutorial 1");
     }
 
     public void tutorial2()
     {
-        SceneManager.LoadScene("tutorial2");
-        GameManager.isTutorial = true;
+        SceneManager.LoadScene("tutorial 2");
+
     }
     public void SceneLVL1()
     {
         SceneManager.LoadScene("lvl1");
-        GameManager.isTutorial = false;
     }
 
     public void mainS()

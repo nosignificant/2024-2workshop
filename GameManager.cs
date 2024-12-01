@@ -13,12 +13,12 @@ public class GameManager : MonoBehaviour
 
     public GameObject parent;
     public GameObject GameText;
-    public static TextMeshProUGUI text;
+    public static GameObject space; 
+    private SpriteRenderer spaceSprite;
+    public static TextMeshProUGUI gText;
     public static Dictionary<Vector2, GameObject> MovingTile = new Dictionary<Vector2, GameObject>();
     public static Dictionary<Vector2, GameObject> ObstacleTiles = new Dictionary<Vector2, GameObject>();
 
-
-    public static bool isTutorial;
 
 
     void Start()
@@ -26,10 +26,12 @@ public class GameManager : MonoBehaviour
         Scene scene = SceneManager.GetActiveScene();
         parent = GameObject.Find("parent");
         GameText = GameObject.Find("GameText");
-        text = GameText.GetComponent<TextMeshProUGUI>();
+        space = GameObject.Find("SPACE");
+        spaceSprite = space.GetComponent<SpriteRenderer>();
+        gText = GameText.GetComponent<TextMeshProUGUI>();
 
-            RegisterMovingTiles();
-
+        RegisterMovingTiles();
+        RegisterCantMovePlace();
     }
 
     public static void RegisterMovingTiles()
@@ -38,16 +40,15 @@ public class GameManager : MonoBehaviour
 
         foreach (Tile tile in tiles)
         {
-            Vector2 position = new Vector2(tile.transform.position.x, tile.transform.position.y);
+            if (tile.name != "go")
+            {
+                Vector2 position = new Vector2(tile.transform.position.x, tile.transform.position.y);
 
-            if (!MovingTile.ContainsKey(position))
-            {
-                MovingTile.Add(position, tile.gameObject);
-                Debug.Log($"Registered MovingTile: {tile.gameObject.name} at {position}");
-            }
-            else
-            {
-                Debug.LogWarning($"Duplicate Tile position found at {position}. Skipping: {tile.gameObject.name}");
+                if (!MovingTile.ContainsKey(position))
+                {
+                    MovingTile.Add(position, tile.gameObject);
+                    //Debug.Log($"Registered MovingTile: {tile.gameObject.name} at {position}");
+                }
             }
         }
     }
@@ -63,11 +64,11 @@ public class GameManager : MonoBehaviour
             if (!ObstacleTiles.ContainsKey(position))
             {
                 ObstacleTiles.Add(position, obstacle);
-                Debug.Log($"Registered Obstacle: {obstacle.name} at {position}");
+                //Debug.Log($"Registered Obstacle: {obstacle.name} at {position}");
             }
             else
             {
-                Debug.LogWarning($"Duplicate Obstacle position found at {position}. Skipping: {obstacle.name}");
+                //Debug.LogWarning($"Duplicate Obstacle position found at {position}. Skipping: {obstacle.name}");
             }
         }
     }

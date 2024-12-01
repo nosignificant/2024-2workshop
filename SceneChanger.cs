@@ -5,18 +5,22 @@ using UnityEngine.SceneManagement;
 
 public class SceneChanger : MonoBehaviour
 {
-    public GameObject GameButton;
+    
     public void tutorial()
     {
         SceneManager.LoadScene("tutorial");
-        GameButton = GameObject.Find("NEXT");
-        GameButton.SetActive(false);
-        if (GameManager.gText.text != null)
-            GameButton.SetActive(true);
+        
+    }
+
+    public void tutorial0()
+    {
+        SceneManager.LoadScene("tutorial 0");
+        
     }
     public void tutorial1()
     {
         SceneManager.LoadScene("tutorial 1");
+        
     }
 
     public void tutorial2()
@@ -33,4 +37,5 @@ public class SceneChanger : MonoBehaviour
     {
         SceneManager.LoadScene("SampleScene");
     }
-}
+
+    }

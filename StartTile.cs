@@ -1,5 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
+using TMPro.Examples;
 using Unity.Burst.CompilerServices;
 using UnityEngine;
 
@@ -37,16 +39,11 @@ public class StartTile : Tile
     private void Update()
     {
         if (start)
-        {
             if (Input.GetKeyUp(KeyCode.Space))
-            {
                 MoveForward();
-                Debug.Log("start set false");
-                
-            }
-        }
     }
 
+    // 타일 할당 함수
     private Tile PrefabAssign()
     {
         Vector2 currentPos = GetPos();
@@ -55,28 +52,35 @@ public class StartTile : Tile
         if (GameManager.MovingTile.TryGetValue(currentPos, out GameObject curtPrefab))
         {
             currentTile = curtPrefab.GetComponent<Tile>();
-            Debug.Log("prefab Assign - current pos: " + currentPos + "currentTile: " + currentTile.name);
+            //Debug.Log("prefab Assign - current pos: " + currentPos + "currentTile: " + currentTile.name);
             currentTile.SetReaded(true);
             return currentTile;
         }
 
         return currentTile;
     }
+
+    //sign 확인 함수 
     private IEnumerator CheckSign(Tile currentTile)
     {
         if (currentTile != null)
         {
             int signNow = currentTile.isTrueSignHere();
             signs.Add(signNow);
-            Debug.Log("add " + signNow);
 
             switch (signNow)
             {
                 case 0:
                     start = true;
-                    Debug.Log("set start true");
-                    displayedConsonants.Add(Alphabet.FindConsonant(signs));
-                    GameManager.gText.text = string.Concat(displayedConsonants);
+                    GameManager.space.color = UnityEngine.Color.white;
+                    if(Alphabet.FindConsonant(signs) != null)
+                    {
+                        GameManager.gText.text += Alphabet.FindConsonant(signs);
+                        Debug.Log("now string: " + GameManager.gText.text);
+                    }
+                        
+
+                    yield return new WaitForSeconds(0.5f);  
                     signs.Clear();
 
                     break;
@@ -189,8 +193,8 @@ public class StartTile : Tile
         SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
         if (spriteRenderer != null)
         {
-            Color originalColor = spriteRenderer.color;
-            spriteRenderer.color = Color.black;
+            UnityEngine.Color originalColor = spriteRenderer.color;
+            spriteRenderer.color = UnityEngine.Color.black;
             yield return new WaitForSeconds(0.25f);
             spriteRenderer.color = originalColor;
         }
@@ -205,6 +209,7 @@ public class StartTile : Tile
     {
         startPos = base.GetPos();
         start = false;
+        GameManager.space.color = UnityEngine.Color.gray;
         endPos = startPos + currentDir * 1.0f;
         transform.position = endPos;
 

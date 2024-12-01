@@ -54,8 +54,6 @@ public class Alphabet : MonoBehaviour
                 return kvp.Value.character; // 자음 반환
             }
         }
-
-        Debug.LogWarning("No matching consonant found!");
         return null; // 일치하는 자음이 없을 경우
     }
     private static bool AreListsEqual(List<int> list1, List<int> list2)

@@ -30,7 +30,7 @@ public class Push : MonoBehaviour
         isTrigger = false;
         Vector2 currentPos = this.transform.position;
        Vector2 targetPos = currentPos + playerMove;
-        Debug.Log(this.name + "currentPos : " + currentPos + "targetPos : " + targetPos);
+        //Debug.Log(this.name + "currentPos : " + currentPos + "targetPos : " + targetPos);
 
         if (IsValidPosition(targetPos)) {
             yield return null;
@@ -41,7 +41,7 @@ public class Push : MonoBehaviour
         }
         else
         {
-            Debug.Log($"Cannot move {this.name} to {targetPos} (invalid position or already occupied).");
+            //Debug.Log($"Cannot move {this.name} to {targetPos} (invalid position or already occupied).");
             yield break; // 이동 중단
         }
     }

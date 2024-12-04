@@ -5,7 +5,11 @@ using UnityEngine.SceneManagement;
 
 public class SceneChanger : MonoBehaviour
 {
-    
+    public void control()
+    {
+        SceneManager.LoadScene("control");
+
+    }
     public void tutorial()
     {
         SceneManager.LoadScene("tutorial");
@@ -26,6 +30,12 @@ public class SceneChanger : MonoBehaviour
     public void tutorial2()
     {
         SceneManager.LoadScene("tutorial 2");
+
+    }
+
+    public void tutorial3()
+    {
+        SceneManager.LoadScene("tutorial 3");
 
     }
     public void SceneLVL1()

@@ -38,8 +38,7 @@ public class StartTile : Tile
 
     private void Update()
     {
-        if (start)
-            if (Input.GetKeyUp(KeyCode.Space))
+        if (start && Input.GetKeyUp(KeyCode.Space))
                 MoveForward();
     }
 
@@ -72,14 +71,13 @@ public class StartTile : Tile
             {
                 case 0:
                     start = true;
+                    Debug.Log("start: " + start);
                     GameManager.space.color = UnityEngine.Color.white;
                     if(Alphabet.FindConsonant(signs) != null)
                     {
                         GameManager.gText.text += Alphabet.FindConsonant(signs);
                         Debug.Log("now string: " + GameManager.gText.text);
                     }
-                        
-
                     yield return new WaitForSeconds(0.5f);  
                     signs.Clear();
 
@@ -209,6 +207,7 @@ public class StartTile : Tile
     {
         startPos = base.GetPos();
         start = false;
+        Debug.Log("start: " + start);
         GameManager.space.color = UnityEngine.Color.gray;
         endPos = startPos + currentDir * 1.0f;
         transform.position = endPos;
@@ -218,13 +217,13 @@ public class StartTile : Tile
 
     private void RotateClock()
     {
-        currentDirKey = currentDirKey + 1 > 8 ? 1 : currentDirKey + 2;
+        currentDirKey = currentDirKey + 1 > 7 ? 1 : currentDirKey + 2;
         UpdateSprite();
     }
 
     private void RotateCounter()
     {
-        currentDirKey = currentDirKey - 1 < 1 ? 8 : currentDirKey - 2;
+        currentDirKey = currentDirKey - 1 < 1 ? 7 : currentDirKey - 2;
         UpdateSprite();
     }
 
@@ -260,111 +259,111 @@ public class StartTile : Tile
     }
 
     //상하좌우 확인 딕셔너리
-    public Dictionary<string, Vector2> GetRelativeDirections()
+    public Dictionary<string, Vector2> GetRelativeDirections(int range = 1)
     {
-        // 진행 방향에 따라 상대 방향 반환
+        // 진행 방향에 따라 상대 방향 반환, range는 확인할 거리
         return currentDirKey switch
         {
             1 => new Dictionary<string, Vector2>
         { // 진행 방향이 →
-            { "Right", Vector2.right },
-            { "Up", Vector2.up },
-            { "Left", Vector2.left },
-            { "Down", Vector2.down },
-            { "UpRight", new Vector2(1, 1) },
-            { "UpLeft", new Vector2(-1, 1) },
-            { "DownRight", new Vector2(1, -1) },
-            { "DownLeft", new Vector2(-1, -1) }
+            { "Right", Vector2.right * range },
+            { "Up", Vector2.up * range },
+            { "Left", Vector2.left * range },
+            { "Down", Vector2.down * range },
+            { "UpRight", new Vector2(1, 1) * range },
+            { "UpLeft", new Vector2(-1, 1) * range },
+            { "DownRight", new Vector2(1, -1) * range },
+            { "DownLeft", new Vector2(-1, -1) * range }
         },
             2 => new Dictionary<string, Vector2>
         { // 진행 방향이 ↘
-            { "Right", new Vector2(1, -1) },
-            { "Up", Vector2.right },
-            { "Left", Vector2.down },
-            { "Down", Vector2.left },
-            { "UpRight", Vector2.right },
-            { "UpLeft", Vector2.down },
-            { "DownRight", Vector2.left },
-            { "DownLeft", Vector2.up }
+            { "Right", new Vector2(1, -1) * range },
+            { "Up", Vector2.right * range },
+            { "Left", Vector2.down * range },
+            { "Down", Vector2.left * range },
+            { "UpRight", Vector2.right * range },
+            { "UpLeft", Vector2.down * range },
+            { "DownRight", Vector2.left * range },
+            { "DownLeft", Vector2.up * range }
         },
             3 => new Dictionary<string, Vector2>
         { // 진행 방향이 ↓
-            { "Right", Vector2.down },
-            { "Up", Vector2.right },
-            { "Left", Vector2.up },
-            { "Down", Vector2.left },
-            { "UpRight", new Vector2(1, -1) },
-            { "UpLeft", new Vector2(1, 1) },
-            { "DownRight", new Vector2(-1, -1) },
-            { "DownLeft", new Vector2(-1, 1) }
+            { "Right", Vector2.down * range },
+            { "Up", Vector2.right * range },
+            { "Left", Vector2.up * range },
+            { "Down", Vector2.left * range },
+            { "UpRight", new Vector2(1, -1) * range },
+            { "UpLeft", new Vector2(1, 1) * range },
+            { "DownRight", new Vector2(-1, -1) * range },
+            { "DownLeft", new Vector2(-1, 1) * range }
         },
             4 => new Dictionary<string, Vector2>
         { // 진행 방향이 ↙
-            { "Right", new Vector2(-1, -1) },
-            { "Up", Vector2.down },
-            { "Left", Vector2.left },
-            { "Down", Vector2.up },
-            { "UpRight", Vector2.down },
-            { "UpLeft", Vector2.left },
-            { "DownRight", Vector2.up },
-            { "DownLeft", Vector2.right }
+            { "Right", new Vector2(-1, -1) * range },
+            { "Up", Vector2.down * range },
+            { "Left", Vector2.left * range },
+            { "Down", Vector2.up * range },
+            { "UpRight", Vector2.down * range },
+            { "UpLeft", Vector2.left * range },
+            { "DownRight", Vector2.up * range },
+            { "DownLeft", Vector2.right * range }
         },
             5 => new Dictionary<string, Vector2>
         { // 진행 방향이 ←
-            { "Right", Vector2.left },
-            { "Up", Vector2.down },
-            { "Left", Vector2.right },
-            { "Down", Vector2.up },
-            { "UpRight", new Vector2(-1, -1) },
-            { "UpLeft", new Vector2(-1, 1) },
-            { "DownRight", new Vector2(1, -1) },
-            { "DownLeft", new Vector2(1, 1) }
+            { "Right", Vector2.left * range },
+            { "Up", Vector2.down * range },
+            { "Left", Vector2.right * range },
+            { "Down", Vector2.up * range },
+            { "UpRight", new Vector2(-1, -1) * range },
+            { "UpLeft", new Vector2(-1, 1) * range },
+            { "DownRight", new Vector2(1, -1) * range },
+            { "DownLeft", new Vector2(1, 1) * range }
         },
             6 => new Dictionary<string, Vector2>
         { // 진행 방향이 ↖
-            { "Right", new Vector2(-1, 1) },
-            { "Up", Vector2.left },
-            { "Left", Vector2.up },
-            { "Down", Vector2.right },
-            { "UpRight", Vector2.left },
-            { "UpLeft", Vector2.up },
-            { "DownRight", Vector2.right },
-            { "DownLeft", Vector2.down }
+            { "Right", new Vector2(-1, 1) * range },
+            { "Up", Vector2.left * range },
+            { "Left", Vector2.up * range },
+            { "Down", Vector2.right * range },
+            { "UpRight", Vector2.left * range },
+            { "UpLeft", Vector2.up * range },
+            { "DownRight", Vector2.right * range },
+            { "DownLeft", Vector2.down * range }
         },
             7 => new Dictionary<string, Vector2>
         { // 진행 방향이 ↑
-            { "Right", Vector2.up },
-            { "Up", Vector2.left },
-            { "Left", Vector2.down },
-            { "Down", Vector2.right },
-            { "UpRight", new Vector2(-1, 1) },
-            { "UpLeft", new Vector2(1, 1) },
-            { "DownRight", new Vector2(-1, -1) },
-            { "DownLeft", new Vector2(1, -1) }
+            { "Right", Vector2.up * range },
+            { "Up", Vector2.left * range },
+            { "Left", Vector2.down * range },
+            { "Down", Vector2.right * range },
+            { "UpRight", new Vector2(-1, 1) * range },
+            { "UpLeft", new Vector2(1, 1) * range },
+            { "DownRight", new Vector2(-1, -1) * range },
+            { "DownLeft", new Vector2(1, -1) * range }
         },
             8 => new Dictionary<string, Vector2>
         { // 진행 방향이 ↗
-            { "Right", new Vector2(1, 1) },
-            { "Up", Vector2.up },
-            { "Left", Vector2.right },
-            { "Down", Vector2.down },
-            { "UpRight", Vector2.up },
-            { "UpLeft", Vector2.right },
-            { "DownRight", Vector2.down },
-            { "DownLeft", Vector2.left }
+            { "Right", new Vector2(1, 1) * range },
+            { "Up", Vector2.up * range },
+            { "Left", Vector2.right * range },
+            { "Down", Vector2.down * range },
+            { "UpRight", Vector2.up * range },
+            { "UpLeft", Vector2.right * range },
+            { "DownRight", Vector2.down * range },
+            { "DownLeft", Vector2.left * range }
         },
             _ => new Dictionary<string, Vector2>
         { // 기본값
-            { "Right", Vector2.right },
-            { "Up", Vector2.up },
-            { "Left", Vector2.left },
-            { "Down", Vector2.down },
-            { "UpRight", new Vector2(1, 1) },
-            { "UpLeft", new Vector2(-1, 1) },
-            { "DownRight", new Vector2(1, -1) },
-            { "DownLeft", new Vector2(-1, -1) }
+            { "Right", Vector2.right * range },
+            { "Up", Vector2.up * range },
+            { "Left", Vector2.left * range },
+            { "Down", Vector2.down * range },
+            { "UpRight", new Vector2(1, 1) * range },
+            { "UpLeft", new Vector2(-1, 1) * range },
+            { "DownRight", new Vector2(1, -1) * range },
+            { "DownLeft", new Vector2(-1, -1) * range }
         }
         };
-
     }
+
 }

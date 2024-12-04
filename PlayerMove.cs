@@ -108,7 +108,7 @@ public class PlayerMove : MonoBehaviour
         if (spriteRenderer != null)
         {
             Color originalColor = spriteRenderer.color;
-            Color blinkColor = Color.black; // 깜빡일 때의 색상
+            Color blinkColor = Color.white; // 깜빡일 때의 색상
 
             while (true) // 무한 반복
             {
